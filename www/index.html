@@ -21,6 +21,9 @@
   --line: #d9d6cc;
   --accent: #b7791f;
   --accent-ink: #ffffff;
+  --btn: #d3cfc3;
+  --btn-ink: #2a2a33;
+  --bar: #8c8672;
   box-sizing: border-box;
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -29,11 +32,13 @@
   :root:not([data-theme="light"]) {
     --bg: #15161b; --bg2: #2b2c3a; --surface: #1f2029; --ink: #ecebf2;
     --muted: #9a9bad; --line: #34364a; --accent: #f0b429; --accent-ink: #1a1405;
+    --btn: #34374a; --btn-ink: #dcdbe6; --bar: #7a80ac;
   }
 }
 :root[data-theme="dark"] {
   --bg: #15161b; --bg2: #2b2c3a; --surface: #1f2029; --ink: #ecebf2;
   --muted: #9a9bad; --line: #34364a; --accent: #f0b429; --accent-ink: #1a1405;
+  --btn: #34374a; --btn-ink: #dcdbe6; --bar: #7a80ac;
 }
 *, *::before, *::after { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
@@ -51,19 +56,19 @@ button { touch-action: manipulation; -webkit-user-select: none; user-select: non
 .top { display: flex; align-items: center; justify-content: space-between; padding: 14px 0 8px; color: var(--muted); font-size: 14px; }
 .top button { background: none; border: 1px solid var(--line); color: var(--muted); font: inherit; padding: 8px 14px; border-radius: 10px; cursor: pointer; }
 .progress { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; margin-bottom: 8px; }
-.progress > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s ease; }
+.progress > i { display: block; height: 100%; width: 0; background: var(--bar); transition: width .25s ease; }
 .progress.hidden { visibility: hidden; }
 
 main { flex: 1; min-height: 0; padding: 0 0 100px; }
 .stage { position: relative; width: 100%; height: 100%; border-radius: 24px; overflow: hidden; background: var(--surface); }
-.zone { position: absolute; inset: 0; transition: clip-path .55s cubic-bezier(.65,.05,.25,1), -webkit-clip-path .55s cubic-bezier(.65,.05,.25,1), background-color .3s ease; }
+.zone { position: absolute; inset: 0; transition: clip-path .55s cubic-bezier(.65,.05,.25,1), -webkit-clip-path .55s cubic-bezier(.65,.05,.25,1), background-color .55s ease; }
 .label {
   position: absolute; transform: translate(-50%, -50%);
   text-align: center;
   font-family: "Literata", Georgia, "Times New Roman", serif;
   font-weight: 600; line-height: 1.12; letter-spacing: -0.01em;
   overflow-wrap: normal; word-break: normal; hyphens: none;
-  transition: left .55s cubic-bezier(.65,.05,.25,1), top .55s cubic-bezier(.65,.05,.25,1), font-size .55s ease, color .3s ease;
+  transition: left .55s cubic-bezier(.65,.05,.25,1), top .55s cubic-bezier(.65,.05,.25,1), font-size .55s ease, color .55s ease;
 }
 .label span { display: inline-block; }
 .label.pop span { animation: pop .35s ease-out; }
@@ -79,7 +84,7 @@ main { flex: 1; min-height: 0; padding: 0 0 100px; }
 .actions { position: fixed; left: 0; right: 0; margin: 0 auto; max-width: 760px; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); padding: 0 16px; display: flex; gap: 8px; }
 .actions button { height: 64px; border-radius: 20px; font: inherit; cursor: pointer; }
 .btn2 { padding: 0 18px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); font-size: 16px; }
-.main { flex: 1; min-width: 120px; border: 0; background: var(--accent); color: var(--accent-ink); font-size: 21px; font-weight: 600; box-shadow: 0 6px 20px rgba(0,0,0,.28); }
+.main { flex: 1; min-width: 120px; border: 1px solid var(--line); background: var(--btn); color: var(--btn-ink); font-size: 21px; font-weight: 600; }
 .main:active, .btn2:active { transform: scale(.97); }
 button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 
@@ -118,6 +123,7 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .slrow input[type=range] { flex: 1; -webkit-appearance: none; appearance: none; height: 16px; border-radius: 8px; margin: 0; background: var(--line); }
 .slrow input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 28px; height: 28px; border-radius: 50%; background: #fff; border: 3px solid #222; box-shadow: 0 1px 4px rgba(0,0,0,.4); }
 .slrow input[type=range]::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: #fff; border: 3px solid #222; }
+.dim { opacity: .35; pointer-events: none; }
 .preview { display: flex; border-radius: 16px; overflow: hidden; height: 76px; margin: 10px 0 4px; }
 .preview div { flex: 1; display: flex; align-items: center; justify-content: center; font-family: "Literata", Georgia, serif; font-weight: 600; font-size: 22px; }
 </style>
@@ -150,6 +156,12 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
   <div class="bar"><button type="button" id="btnClose">Закрыть</button></div>
   <div class="sheet-inner">
     <h2>Цвета зон</h2>
+    <div class="seg" id="segColors">
+      <button type="button" data-v="0">Мои цвета</button>
+      <button type="button" data-v="1">Случайные</button>
+    </div>
+    <p class="note" id="colorNote"></p>
+    <div id="colorBox">
     <div class="ctabs">
       <button class="ctab" id="tab1" type="button"></button>
       <button class="ctab" id="tab2" type="button"></button>
@@ -160,6 +172,7 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
     <div class="slrow"><span>Яркость</span><input type="range" id="sL" min="8" max="94" step="1" aria-label="Яркость"></div>
     <div class="preview"><div id="pv1">Интерес</div><div id="pv2">Очарование</div></div>
     <p class="note">Первый цвет получает первая эмоция пары, второй цвет вторая. Цвет всегда остаётся у своей эмоции, когда они меняются местами.</p>
+    </div>
 
     <h2>Расположение</h2>
     <div class="chips" id="chips">
@@ -214,7 +227,7 @@ var state = {
   items: DEFAULT_ITEMS, src: "builtin", theme: "dark",
   c1: "#35629e", c2: "#2e8a86",
   hor: true, ver: true, diag: true,
-  randLayout: false, newPair: "after",
+  randLayout: false, randColors: false, newPair: "after",
   auto: false, minS: 3, maxS: 8,
   cur: null, ptr: 0, pairNo: 0
 };
@@ -284,7 +297,7 @@ function save() {
     var s = {
       src: state.src, theme: state.theme, c1: state.c1, c2: state.c2,
       hor: state.hor, ver: state.ver, diag: state.diag,
-      randLayout: state.randLayout, newPair: state.newPair,
+      randLayout: state.randLayout, randColors: state.randColors, newPair: state.newPair,
       auto: state.auto, minS: state.minS, maxS: state.maxS,
       cur: state.cur, ptr: state.ptr, pairNo: state.pairNo
     };
@@ -304,7 +317,7 @@ function load() {
     state.theme = s.theme || "dark";
     if (isHex(s.c1)) state.c1 = s.c1;
     if (isHex(s.c2)) state.c2 = s.c2;
-    ["hor", "ver", "diag", "randLayout", "auto"].forEach(function (k) { if (typeof s[k] === "boolean") state[k] = s[k]; });
+    ["hor", "ver", "diag", "randLayout", "randColors", "auto"].forEach(function (k) { if (typeof s[k] === "boolean") state[k] = s[k]; });
     state.newPair = s.newPair === "each" ? "each" : "after";
     state.minS = clampS(s.minS, 3); state.maxS = clampS(s.maxS, 8);
     if (state.minS > state.maxS) state.maxS = state.minS;
@@ -312,6 +325,7 @@ function load() {
     var c = s.cur, n = state.items.length;
     if (c && c.a >= 0 && c.a < n && c.b >= 0 && c.b < n && LAYOUTS[c.layout] && Array.isArray(c.queue)) {
       c.queue = c.queue.filter(function (x) { return LAYOUTS[x]; });
+      if (!isHex(c.c1) || !isHex(c.c2)) { delete c.c1; delete c.c2; }
       state.cur = c;
     }
   } catch (e) {}
@@ -341,6 +355,12 @@ function buildQueue() {
   }
   return q;
 }
+function randomColors() {
+  var h1 = Math.floor(Math.random() * 360);
+  var h2 = (h1 + 70 + Math.floor(Math.random() * 221)) % 360;      // оттенки минимум на 70° друг от друга
+  var pick = function (h) { return hslToHex(h, 38 + Math.floor(Math.random() * 25), 28 + Math.floor(Math.random() * 19)); };
+  return [pick(h1), pick(h2)];
+}
 function makePair() {
   var n = state.items.length, a = drawOne(), b;
   do { b = drawOne(); } while (b === a && n > 1);
@@ -355,6 +375,7 @@ function nextStep() {
   var fresh = false;
   if (!cur || !cur.queue.length) { cur = makePair(); fresh = true; }
   cur.layout = cur.queue.shift();
+  if (state.randColors) { var rc = randomColors(); cur.c1 = rc[0]; cur.c2 = rc[1]; }
   state.cur = cur;
   save(); render({ pop: fresh });
 }
@@ -411,8 +432,10 @@ function render(opts) {
   }
   if (!cur) { nextStep(); return; }
   var L = LAYOUTS[cur.layout];
-  place("A", L.A, state.items[cur.a], state.c1);
-  place("B", L.B, state.items[cur.b], state.c2);
+  var k1 = (state.randColors && isHex(cur.c1)) ? cur.c1 : state.c1;
+  var k2 = (state.randColors && isHex(cur.c2)) ? cur.c2 : state.c2;
+  place("A", L.A, state.items[cur.a], k1);
+  place("B", L.B, state.items[cur.b], k2);
   if (opts && opts.pop) {
     ["lblA", "lblB"].forEach(function (id) { var l = el(id); l.classList.remove("pop"); void l.offsetWidth; l.classList.add("pop"); });
   }
@@ -521,9 +544,23 @@ el("tab2").addEventListener("click", function () { tab = 2; updateColorUI(false)
 /* ---------- настройки: остальное ---------- */
 function syncSettings() {
   document.querySelectorAll("#chips button").forEach(function (b) { b.className = state[b.getAttribute("data-k")] ? "sel" : ""; });
-  document.querySelectorAll("#segOrder button").forEach(function (b) { b.className = (b.getAttribute("data-v") === "1") === state.randLayout ? "sel" : ""; });
+  document.querySelectorAll("#segColors button").forEach(function (b) {
+  b.addEventListener("click", function () {
+    var on = b.getAttribute("data-v") === "1";
+    if (on === state.randColors) return;
+    state.randColors = on;
+    if (on && state.cur) { var rc = randomColors(); state.cur.c1 = rc[0]; state.cur.c2 = rc[1]; }
+    save(); syncSettings(); render({ pop: false });
+  });
+});
+document.querySelectorAll("#segOrder button").forEach(function (b) { b.className = (b.getAttribute("data-v") === "1") === state.randLayout ? "sel" : ""; });
   document.querySelectorAll("#segPair button").forEach(function (b) { b.className = b.getAttribute("data-v") === state.newPair ? "sel" : ""; });
   document.querySelectorAll("#segAuto button").forEach(function (b) { b.className = (b.getAttribute("data-v") === "1") === state.auto ? "sel" : ""; });
+  document.querySelectorAll("#segColors button").forEach(function (b) { b.className = (b.getAttribute("data-v") === "1") === state.randColors ? "sel" : ""; });
+  el("colorBox").className = state.randColors ? "dim" : "";
+  el("colorNote").textContent = state.randColors
+    ? "При каждом шаге обе зоны получают новые случайные цвета вместе с новым расположением. Выбранные ниже цвета сейчас не используются."
+    : "Две зоны имеют ваши цвета. Они остаются у своих эмоций при смене расположения.";
   el("autoBox").style.display = state.auto ? "" : "none";
   el("minVal").textContent = state.minS + " с";
   el("maxVal").textContent = state.maxS + " с";
