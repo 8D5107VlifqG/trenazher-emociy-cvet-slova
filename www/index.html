@@ -54,6 +54,19 @@ body {
 button { touch-action: manipulation; -webkit-user-select: none; user-select: none; }
 .app { height: 100%; display: flex; flex-direction: column; max-width: 760px; margin: 0 auto; padding: 0 20px; }
 .top { display: flex; align-items: center; justify-content: space-between; padding: 14px 0 8px; color: var(--muted); font-size: 14px; }
+.sheet h3 { font-size: 16px; font-weight: 600; margin: 20px 0 8px; color: var(--ink); }
+#counterTop { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 10px; }
+.catlist { display: flex; flex-direction: column; gap: 8px; margin: 6px 0; }
+.catlist button { display: flex; justify-content: space-between; align-items: center; gap: 10px; text-align: left; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 13px 14px; font: inherit; font-size: 16px; cursor: pointer; }
+.catlist button small { color: var(--muted); font-size: 14px; }
+.catlist button.sel { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.inp { width: 100%; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 14px; font: inherit; font-size: 17px; margin: 6px 0; }
+.inp:focus { outline: 2px solid var(--accent); outline-offset: 0; }
+.pin { background: var(--surface); border: 1px solid var(--accent); border-radius: 12px; padding: 12px 14px; font-size: 16px; margin: 6px 0 10px; }
+.ghead { margin: 18px 0 6px; color: var(--muted); font-size: 13px; letter-spacing: .04em; text-transform: uppercase; }
+.prow { display: flex; gap: 8px; margin-bottom: 6px; }
+.pbtn { flex: 1; text-align: left; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font: inherit; font-size: 16px; cursor: pointer; }
+.pdel { width: 48px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 12px; font-size: 22px; cursor: pointer; }
 .top button { background: none; border: 1px solid var(--line); color: var(--muted); font: inherit; padding: 8px 14px; border-radius: 10px; cursor: pointer; }
 .progress { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; margin-bottom: 8px; }
 .progress > i { display: block; height: 100%; width: 0; background: var(--bar); transition: width .25s ease; }
@@ -82,9 +95,9 @@ main { flex: 1; min-height: 0; padding: 0 0 100px; }
 .hint { color: var(--muted); font-size: 15px; padding: 24px; text-align: center; }
 
 .actions { position: fixed; left: 0; right: 0; margin: 0 auto; max-width: 760px; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); padding: 0 16px; display: flex; gap: 8px; }
-.actions button { height: 64px; border-radius: 20px; font: inherit; cursor: pointer; }
-.btn2 { padding: 0 18px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); font-size: 16px; }
-.main { flex: 1; min-width: 120px; border: 1px solid var(--line); background: var(--btn); color: var(--btn-ink); font-size: 21px; font-weight: 600; }
+.actions button { flex: 1 1 0; min-width: 0; height: 64px; padding: 0 4px; border-radius: 20px; font: inherit; font-size: clamp(15px, 4.6vw, 19px); white-space: nowrap; cursor: pointer; }
+.btn2 { border: 1px solid var(--line); background: var(--surface); color: var(--muted); font-weight: 500; }
+.main { border: 1px solid var(--line); background: var(--btn); color: var(--btn-ink); font-weight: 600; }
 .main:active, .btn2:active { transform: scale(.97); }
 button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 
@@ -155,6 +168,30 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 <div class="sheet" id="setSheet" role="dialog" aria-label="Настройки">
   <div class="bar"><button type="button" id="btnClose">Закрыть</button></div>
   <div class="sheet-inner">
+    <h2>Что показывать</h2>
+    <div class="seg" id="segSource">
+      <button type="button" data-v="emotions">Эмоции</button>
+      <button type="button" data-v="polarities">Полярности</button>
+    </div>
+    <div id="polBox">
+      <p class="note">Каждая полярность показывается как пара слов: два полюса в двух зонах. Цвета, расположения, автосмена и режимы слов работают так же, как с эмоциями.</p>
+      <h3>Категория</h3>
+      <div class="catlist" id="catList"></div>
+      <h3>Порядок пар</h3>
+      <div class="seg" id="segPolOrder">
+        <button type="button" data-v="list">По списку</button>
+        <button type="button" data-v="random">Случайно</button>
+      </div>
+      <h3>Отдельная пара</h3>
+      <div id="pinInfo"></div>
+      <div class="row"><button class="btn" id="btnPickPair" type="button">Выбрать пару из списка</button></div>
+      <h3>Своя пара</h3>
+      <input class="inp" id="inA" type="text" maxlength="80" placeholder="Первый полюс, например: Любовь" autocomplete="off">
+      <input class="inp" id="inB" type="text" maxlength="80" placeholder="Второй полюс, например: Страх" autocomplete="off">
+      <div class="row"><button class="btn primary" id="btnAddPair" type="button">Добавить и показать</button></div>
+      <div class="status" id="pairStatus"></div>
+    </div>
+
     <h2>Цвета зон</h2>
     <div class="seg" id="segColors">
       <button type="button" data-v="0">Мои цвета</button>
@@ -174,6 +211,14 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
     <p class="note">Первый цвет получает первая эмоция пары, второй цвет вторая. Цвет всегда остаётся у своей эмоции, когда они меняются местами.</p>
     </div>
 
+    <h2>Слова на экране</h2>
+    <div class="seg" id="segWords">
+      <button type="button" data-v="2">Две эмоции</button>
+      <button type="button" data-v="1">Одна эмоция</button>
+      <button type="button" data-v="0">Без слов</button>
+    </div>
+    <p class="note" id="wordsNote"></p>
+
     <h2>Расположение</h2>
     <div class="chips" id="chips">
       <button type="button" data-k="hor">Горизонтально</button>
@@ -190,7 +235,7 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
       <button type="button" data-v="after">Пара после всех видов</button>
       <button type="button" data-v="each">Пара на каждом шаге</button>
     </div>
-    <p class="note">Когда выбранные расположения для одной пары закончились, появляется новая случайная пара. Режим «на каждом шаге» меняет пару при каждом нажатии «Далее».</p>
+    <p class="note">Когда выбранные расположения для одной пары (или слова) закончились, появляется новая случайная пара. Режим «на каждом шаге» меняет пару при каждом нажатии «Далее».</p>
 
     <h2>Автосмена</h2>
     <div class="seg" id="segAuto">
@@ -203,11 +248,13 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
       <p class="note">Приложение само нажимает «Далее» через случайное время между этими значениями (от 2 до 30 секунд). Внизу появятся кнопки «Старт» и «Пауза».</p>
     </div>
 
-    <h2>Загрузить свой список</h2>
-    <p class="note">Файл .txt, одна эмоция в строке. Повторы убираются.</p>
-    <div class="row"><button class="btn primary" id="btnPick" type="button">Выбрать файл</button></div>
-    <input type="file" id="filePick" accept=".txt,text/plain" hidden>
-    <div class="status" id="loadStatus"></div>
+    <div id="emoBox">
+      <h2>Загрузить свой список</h2>
+      <p class="note">Файл .txt, одна эмоция в строке. Повторы убираются.</p>
+      <div class="row"><button class="btn primary" id="btnPick" type="button">Выбрать файл</button></div>
+      <input type="file" id="filePick" accept=".txt,text/plain" hidden>
+      <div class="status" id="loadStatus"></div>
+    </div>
 
     <h2>Прогресс</h2>
     <div class="row">
@@ -219,20 +266,54 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
   </div>
 </div>
 
+<div class="sheet" id="pickSheet" role="dialog" aria-label="Выбор пары">
+  <div class="bar"><button type="button" id="btnPickClose">Закрыть</button></div>
+  <div class="sheet-inner">
+    <h2>Выбор пары</h2>
+    <input class="inp" id="pickSearch" type="search" placeholder="Поиск по словам" autocomplete="off">
+    <div id="pickList"></div>
+  </div>
+</div>
+
 <script>
 var DEFAULT_ITEMS = ["Радость", "Удивление", "Отвращение", "Страх", "Печаль", "Гнев", "Покинутость", "Смятение", "Озадаченность", "Одухотворенность", "Великодушие", "Нежность", "Сочувствие", "Симпатия", "Дружелюбие", "Уважение", "Безопасность", "Привязанность", "Любовь", "Благоговение", "Восхищение", "Обожание", "Расположение", "Безмятежность", "Прощение", "Восприимчивость", "Сдержанность", "Комфорт", "Довольство", "Расслабленность", "Мирность", "Облегчение", "Удовлетворенность", "Спокойствие", "Живость", "Оживленность", "Интерес", "Увлеченность", "Заинтересованность", "Надежда", "Признательность", "Оцененность по достоинству", "Очарование", "Мечтательность", "Безобидность", "Удовольствие", "Удачливость", "Триумф", "Забавность", "Блаженство", "Счастье", "Сентиментальность", "Гордость", "Оптимизм", "Готовность", "Дерзость", "Уверенность в себе", "Решимость", "Твердая уверенность", "Дух соперничества", "Трепет", "Эйфория", "Помешательство", "Страсть", "Возбужденность", "Взволнованность", "Энтузиазм", "Сильное желание", "Впечатлительность", "Потрясение", "Изумление", "Остолбенение", "Поражение", "Шок", "Неловкость", "Отчужденность", "Скорбь", "Рефлексия", "Укоры совести", "Сожаление", "Тяжесть", "Неудобство", "Смущение", "Ущемленность", "Униженность", "Вина", "Стыд", "Хандра", "Тоска", "Вспыльчивость", "Нетерпеливость", "Сварливость", "Упадок сил", "Расстройство", "Истощение", "Скука", "Самодовольство", "Апатия", "Глупость", "Усталость", "Удрученность", "Нелюдимость", "Болезненность", "Чувство отсутствия к вам любви", "Застенчивость", "Отсталость", "Боль", "Разочарование", "Подавленность", "Серьезность", "Угрюмость", "Ранимость", "Слабость", "Беспомощность", "Опустошенность", "Депрессия", "Отчаяние", "Мрачность", "Угнетенность", "Горе", "Грусть", "Изолированность", "Одиночество", "Ощущение ловушки", "Бессвязность", "Дезориентация", "Потерянность", "Запутанность", "Ощущение тупика", "Уныние", "Опасение", "Ошеломленность", "Ощущение угрозы", "Подверженность навязчивой идее", "Ужас", "Боязнь", "Стресс", "Волнение", "Тревога", "Испуг", "Обеспокоенность", "Нервозность", "Тревожность", "Озабоченность", "Настороженность", "Циничность", "Подозрительность", "Уязвленность", "Презрение", "Неповиновение", "Надменность", "Зависть", "Сопротивление", "Бунтарство", "Воинственность", "Оскорбленность", "Мстительность", "Раздражение", "Досада", "Сердитость", "Обида", "Ненависть", "Возмущение", "Злость"];
+var DEFAULT_POL = [{"name": "Актуальные полярности", "items": ["Ответственность — Безответственность", "Моё желание — Чужое желание", "Способность (сделать что-либо) — Неспособность", "Энтузиазм — Лень", "Тревога — Спокойствие", "Лидер — Исполнитель", "Решение сделать — Откладывание дел", "Я должен быть прав — Я не должен быть прав", "Другие правы — Я прав", "Я должен — Я хочу", "Я хочу курить — Я не хочу курить", "Стремиться к цели — Отступать от цели", "Терпимость — Нетерпимость", "Я — Моя супруга", "Я — Мой босс", "Я — Мой ребенок", "Я — Другой человек", "Мужчина — Женщина", "Мой отец — Моя мать"]}, {"name": "Фундаментальные полярности", "items": ["Конечность — Бесконечность", "Появление — Исчезновение", "Определённость — Неопределенность", "Часть — Целое", "Влечение — Отталкивание", "Любовь — Ненависть", "Выжить — Умереть", "Желание контролировать других — Желание, чтобы меня контролировали", "Стремление к безопасности — Стремление к смерти", "Желание отделиться — Желание объединиться", "Желание одобрения другими людьми — Желание одобрять других людей", "Потребность быть любимым — Потребность любить"]}, {"name": "Древние полярности", "items": ["Небеса — Земля", "Солнце — Луна", "Свет и темнота", "Положительный — Отрицательный", "Огонь — Вода", "Речь — Дхарма", "Подтверждение — Отрицание", "Важно — Неважно", "Форма — Бесформенность", "Вопрос — Пустота", "Движение — Остановка", "Чистый — Грязный", "Обычные люди — Мудрецы", "Глупые люди — Мудрые люди", "Старый — Молодой", "Много — Мало", "Длинный — Короткий", "Хороший — Плохой", "Самодовольный и просвещенный", "Потревоженность — Спокойствие", "Честный — Жулик", "Полный — Пустой", "Пологий — Крутой", "Тело — Разум", "Постоянный — Непостоянный", "Добрый — Жестокий", "Счастливый — Сердитый", "Щедрый — Скупой", "Продвижение — Отступление", "Существование — Несуществование"]}, {"name": "Полезные", "items": ["Любовь и страх", "Любовь и свобода", "Любовь и боль", "Любовь и власть", "Любовь и одиночество", "Большой и малый", "Светлый и темный", "Хороший и плохой", "Мужчина и женщина", "Ограниченное и неограниченное", "\"Я\" и \"не-я\"", "Видимое и невидимое", "Существующее и вымышленное", "Появляющееся и исчезающее", "Движение и неподвижность", "Материя и энергия", "Материя и пустота", "Воплощённый мир и невоплощённый мир (существующее и придуманное)", "Точка и объём", "Точка и пространство", "Целое и его части", "Внутренний мир и внешний мир", "Постоянство и мимолетность", "Настоящее и вечность", "Настоящее и прошлое", "Настоящее и будущее", "Начало и конец", "Наконец и навсегда", "Продвижение и отступление", "Победа и поражение", "Изобилие и нищета", "Давать и получать", "\"Я\" и жизнь", "\"Я\" и другие", "Единство с другими и изоляция", "Радость и печаль", "Жизнь и смерть", "Мир и волнения", "Причина и следствие", "Господство и смирение", "Притяжение и отталкивание", "Создание и уничтожение", "Расширение и сокращение", "Свобода и судьба (карма)", "Все и ничто", "Свёртывание и распад", "Звук и тишина", "Собираться и делать", "Забыть что-то и вспомнить что-то", "Удовлетворенность и неудовлетворенность", "Я есть и меня нет", "Единство и двойственность", "Эмоции и разум", "Страсть и духовность", "Свобода и не-свобода", "Свобода и рабство", "Активный и пассивный", "Сознание и бессознательность", "Ограниченное сознание и неограниченное сознание", "Сознание и материя", "Материальный и духовный", "Бесконечно малое и бесконечно большое", "Мир и страх", "Безопасность и небезопасность", "Земной и неземной", "Это мир, и другой мир", "Материальная вселенная и духовная вселенная", "Входить в процесс и выходить из процесса", "Тело и сознание", "Что-то и ничто", "Правда и неправда", "Зависимость и независимость", "Знание и невежество", "Сила и слабость", "Хороший \"Я\" и плохой \"Я\"", "Радость и грусть", "Контроль и свобода", "Творение и существование", "Принимать и отвергать", "\"Я\" и пустота", "Любовь и неприятие", "Продолжать и останавливаться", "Свобода и ограничение", "Любовь и агрессия", "Сознательное и инстинкты", "Величие и неважность", "Видимость и невидимость", "Я и другой", "Существование и несуществование", "Свет и тьма", "Любовь и потеря", "Свобода и несвобода", "Свобода и ответственность", "Сознательное и бессознательное", "Материальное и сознательное", "Материальное и духовное", "Бесконечно малый и бесконечно большой", "Сила и бессилие", "Страх и покой", "Расширение и сжатие", "Все и ничего", "Земной и внеземной", "Этот мир и другой мир", "Вхождение в опыт и выход из опыта", "Божественное и материальное", "Внутри и снаружи", "Правда и неправда (Истина и ложь)", "Наступление и отступление", "Счастье и печаль", "Бытие и сотворение", "Принятие и неприятие", "Я и ничто", "Единение и разделение", "Движение и остановка", "Изучение и знание", "Я и все", "Расслабление и напряжение", "Спокойствие и контроль", "Идеальность и неидеальность"]}];
 
 var KEY = "emotionpairs.v1";
 var state = {
-  items: DEFAULT_ITEMS, src: "builtin", theme: "dark",
+  items: DEFAULT_ITEMS, src: "builtin", theme: "dark", source: "emotions",
   c1: "#35629e", c2: "#2e8a86",
   hor: true, ver: true, diag: true,
-  randLayout: false, randColors: false, newPair: "after",
+  words: 2, randLayout: false, randColors: false, newPair: "after",
   auto: false, minS: 3, maxS: 8,
+  pol: { cat: "all", order: "list", pinned: null, custom: [], ptr: 0 },
   cur: null, ptr: 0, pairNo: 0
 };
+
+/* полярности: "А — Б" или "А и Б" -> два полюса */
+function splitPol(s) {
+  var i = s.indexOf(" — "), a, b;
+  if (i > 0) { a = s.slice(0, i); b = s.slice(i + 3); }
+  else { var m = s.match(/^(.+?) и (.+)$/); if (!m) return null; a = m[1]; b = m[2]; }
+  return { a: cap(a.trim()), b: cap(b.trim()) };
+}
+var POL = DEFAULT_POL.map(function (c) {
+  var pairs = [];
+  c.items.forEach(function (s) { var p = splitPol(s); if (p) { p.cat = c.name; pairs.push(p); } });
+  return { name: c.name, pairs: pairs };
+});
+var CAT_SHORT = { "Актуальные полярности": "Актуальные", "Фундаментальные полярности": "Фундаментальные", "Древние полярности": "Древние", "Полезные": "Полезные" };
+function polList() {
+  var out = [], cat = state.pol.cat;
+  POL.forEach(function (c) { if (cat === "all" || cat === c.name) c.pairs.forEach(function (p) { out.push(p); }); });
+  if (cat === "all" || cat === "custom") state.pol.custom.forEach(function (p) { out.push(p); });
+  return out;
+}
+function ready() {
+  return state.source === "polarities" ? (!!state.pol.pinned || polList().length > 0) : state.items.length >= 2;
+}
 var tab = 1;                         // какой цвет сейчас правится в палитре
-var deck = [], hist = [];
+var deck = [], polDeck = [], hist = [];
 var running = false, remaining = 0, nextAt = 0, tmr = null, resumeAfter = false;
 
 function el(id) { return document.getElementById(id); }
@@ -295,10 +376,11 @@ function hexToHsl(hex) {
 function save() {
   try {
     var s = {
-      src: state.src, theme: state.theme, c1: state.c1, c2: state.c2,
+      src: state.src, theme: state.theme, source: state.source, c1: state.c1, c2: state.c2,
       hor: state.hor, ver: state.ver, diag: state.diag,
-      randLayout: state.randLayout, randColors: state.randColors, newPair: state.newPair,
+      words: state.words, randLayout: state.randLayout, randColors: state.randColors, newPair: state.newPair,
       auto: state.auto, minS: state.minS, maxS: state.maxS,
+      pol: state.pol,
       cur: state.cur, ptr: state.ptr, pairNo: state.pairNo
     };
     if (state.src === "custom") s.items = state.items;
@@ -307,6 +389,7 @@ function save() {
 }
 function isHex(x) { return typeof x === "string" && /^#[0-9a-f]{6}$/i.test(x); }
 function clampS(v, d) { v = parseInt(v, 10); return (v >= 2 && v <= 30) ? v : d; }
+function isStr(x) { return typeof x === "string" && x.length > 0; }
 function load() {
   try {
     var raw = localStorage.getItem(KEY);
@@ -314,16 +397,29 @@ function load() {
     var s = JSON.parse(raw);
     if (!s) return;
     if (s.src === "custom" && s.items && s.items.length) { state.items = s.items; state.src = "custom"; }
+    state.source = s.source === "polarities" ? "polarities" : "emotions";
     state.theme = s.theme || "dark";
     if (isHex(s.c1)) state.c1 = s.c1;
     if (isHex(s.c2)) state.c2 = s.c2;
     ["hor", "ver", "diag", "randLayout", "randColors", "auto"].forEach(function (k) { if (typeof s[k] === "boolean") state[k] = s[k]; });
     state.newPair = s.newPair === "each" ? "each" : "after";
+    state.words = (s.words === 0 || s.words === 1) ? s.words : 2;
     state.minS = clampS(s.minS, 3); state.maxS = clampS(s.maxS, 8);
     if (state.minS > state.maxS) state.maxS = state.minS;
     state.ptr = s.ptr || 0; state.pairNo = s.pairNo || 0;
+    var p = s.pol;
+    if (p) {
+      if (Array.isArray(p.custom)) state.pol.custom = p.custom.filter(function (x) { return x && isStr(x.a) && isStr(x.b); }).map(function (x) { return { a: x.a, b: x.b, cat: "Мои пары" }; });
+      var names = POL.map(function (c) { return c.name; });
+      if (p.cat === "all" || names.indexOf(p.cat) >= 0 || (p.cat === "custom" && state.pol.custom.length)) state.pol.cat = p.cat;
+      state.pol.order = p.order === "random" ? "random" : "list";
+      if (p.pinned && isStr(p.pinned.a) && isStr(p.pinned.b)) state.pol.pinned = { a: p.pinned.a, b: p.pinned.b };
+      state.pol.ptr = parseInt(p.ptr, 10) || 0;
+    }
     var c = s.cur, n = state.items.length;
-    if (c && c.a >= 0 && c.a < n && c.b >= 0 && c.b < n && LAYOUTS[c.layout] && Array.isArray(c.queue)) {
+    var okTxt = c && isStr(c.ta) && isStr(c.tb), okIdx = c && c.a >= 0 && c.a < n && c.b >= 0 && c.b < n;
+    var wantPol = state.source === "polarities";
+    if (c && LAYOUTS[c.layout] && Array.isArray(c.queue) && (okTxt || (okIdx && !wantPol)) && (wantPol === (c.src === "pol"))) {
       c.queue = c.queue.filter(function (x) { return LAYOUTS[x]; });
       if (!isHex(c.c1) || !isHex(c.c2)) { delete c.c1; delete c.c2; }
       state.cur = c;
@@ -361,19 +457,47 @@ function randomColors() {
   var pick = function (h) { return hslToHex(h, 38 + Math.floor(Math.random() * 25), 28 + Math.floor(Math.random() * 19)); };
   return [pick(h1), pick(h2)];
 }
-function makePair() {
+function polPair() {
+  var p = state.pol;
+  if (p.pinned) return { a: p.pinned.a, b: p.pinned.b, lbl: "Закреплена", pos: 0, n: 0, cov: 0 };
+  var list = polList();
+  if (!list.length) return null;
+  var lbl = p.cat === "all" ? "Все" : (p.cat === "custom" ? "Мои пары" : (CAT_SHORT[p.cat] || p.cat)), idx, cov = 0;
+  if (p.order === "random") {
+    if (!polDeck.length) polDeck = shuffle(range(list.length));
+    idx = polDeck.pop();
+    cov = (list.length - polDeck.length) / list.length;
+  } else {
+    idx = p.ptr % list.length;
+    p.ptr = idx + 1;
+  }
+  return { a: list[idx].a, b: list[idx].b, lbl: lbl, pos: idx + 1, n: list.length, cov: cov };
+}
+function emoPair() {
   var n = state.items.length, a = drawOne(), b;
   do { b = drawOne(); } while (b === a && n > 1);
+  return { a: state.items[a], b: state.items[b] };
+}
+function makePair() {
+  var pol = state.source === "polarities";
+  var pr = pol ? polPair() : emoPair();
+  if (!pr) return null;
   state.pairNo++;
   var q = buildQueue();
-  return { a: a, b: b, layout: null, queue: q, total: q.length, no: state.pairNo };
+  var cur = { ta: pr.a, tb: pr.b, layout: null, queue: q, total: q.length, no: state.pairNo };
+  if (pol) { cur.src = "pol"; cur.lbl = pr.lbl; cur.pos = pr.pos; cur.n = pr.n; cur.cov = pr.cov; cur.pinned = !!state.pol.pinned; cur.order = state.pol.order; }
+  return cur;
 }
 function nextStep() {
-  if (state.items.length < 2) return;
+  if (!ready()) return;
   var cur = state.cur;
-  if (cur) { hist.push(JSON.parse(JSON.stringify(cur))); if (hist.length > 100) hist.shift(); }
   var fresh = false;
-  if (!cur || !cur.queue.length) { cur = makePair(); fresh = true; }
+  if (!cur || !cur.queue.length) {
+    var np = makePair();
+    if (!np) return;
+    if (cur) { hist.push(JSON.parse(JSON.stringify(cur))); if (hist.length > 100) hist.shift(); }
+    cur = np; fresh = true;
+  } else { hist.push(JSON.parse(JSON.stringify(cur))); if (hist.length > 100) hist.shift(); }
   cur.layout = cur.queue.shift();
   if (state.randColors) { var rc = randomColors(); cur.c1 = rc[0]; cur.c2 = rc[1]; }
   state.cur = cur;
@@ -411,11 +535,13 @@ function fitFont(text, wPx, hPx) {
   }
   return Math.floor(lo);
 }
-function place(who, slotName, text, color) {
+function place(who, slotName, text, color, show) {
   var s = SLOTS[slotName], zone = el("zone" + who), lbl = el("lbl" + who);
   var poly = "polygon(" + s.poly.map(function (p) { return p[0] + "% " + p[1] + "%"; }).join(",") + ")";
   zone.style.clipPath = poly; zone.style.webkitClipPath = poly;
   zone.style.backgroundColor = color;
+  lbl.style.display = show ? "" : "none";
+  if (!show) return;
   var W = stage.clientWidth, H = stage.clientHeight;
   var wPx = s.w / 100 * W, hPx = s.h / 100 * H;
   lbl.style.left = s.cx + "%"; lbl.style.top = s.cy + "%";
@@ -424,27 +550,37 @@ function place(who, slotName, text, color) {
   lbl.style.color = inkFor(color);
   lbl.firstChild.textContent = text;
 }
+function barFraction(cur) {
+  if (cur.src === "pol") {
+    if (cur.pinned) return (cur.total - cur.queue.length) / cur.total;
+    return cur.order === "random" ? cur.cov : cur.pos / cur.n;
+  }
+  var n = state.items.length;
+  return (n - deck.length) / n;
+}
 function render(opts) {
   var cur = state.cur;
-  if (state.items.length < 2) {
-    el("counterTop").textContent = "";
+  if (!ready()) {
+    el("counterTop").textContent = state.source === "polarities" ? "Нет пар" : "";
     return;
   }
   if (!cur) { nextStep(); return; }
   var L = LAYOUTS[cur.layout];
   var k1 = (state.randColors && isHex(cur.c1)) ? cur.c1 : state.c1;
   var k2 = (state.randColors && isHex(cur.c2)) ? cur.c2 : state.c2;
-  place("A", L.A, state.items[cur.a], k1);
-  place("B", L.B, state.items[cur.b], k2);
+  var ta = typeof cur.ta === "string" ? cur.ta : state.items[cur.a];
+  var tb = typeof cur.tb === "string" ? cur.tb : state.items[cur.b];
+  place("A", L.A, ta, k1, state.words >= 1);
+  place("B", L.B, tb, k2, state.words === 2);
   if (opts && opts.pop) {
     ["lblA", "lblB"].forEach(function (id) { var l = el(id); l.classList.remove("pop"); void l.offsetWidth; l.classList.add("pop"); });
   }
-  el("counterTop").textContent = cur.total > 1
-    ? "Пара " + cur.no + " · " + (cur.total - cur.queue.length) + " из " + cur.total
-    : "Пара " + cur.no;
-  var n = state.items.length;
+  var tail = cur.total > 1 ? " · " + (cur.total - cur.queue.length) + " из " + cur.total : "", head;
+  if (cur.src === "pol") head = cur.pinned ? "Закреплена" : (cur.order === "random" ? cur.lbl : cur.lbl + " " + cur.pos + "/" + cur.n);
+  else head = (state.words === 2 ? "Пара " : (state.words === 1 ? "Слово " : "Круг ")) + cur.no;
+  el("counterTop").textContent = head + tail;
   el("barWrap").classList.toggle("hidden", state.auto);
-  el("bar").style.width = ((n - deck.length) / n * 100) + "%";
+  el("bar").style.width = (barFraction(cur) * 100) + "%";
   setControls();
 }
 function setControls() {
@@ -464,7 +600,7 @@ function schedule(ms) {
   tmr = setTimeout(function () { nextStep(); schedule(randDelay()); }, ms);
 }
 function startRun() {
-  if (!state.auto || state.items.length < 2) return;
+  if (!state.auto || !ready()) return;
   running = true;
   schedule(remaining > 0 ? remaining : randDelay());
   remaining = 0;
@@ -487,7 +623,7 @@ el("btnMain").addEventListener("click", onMain);
 el("btnSkip").addEventListener("click", onSkip);
 el("btnBack").addEventListener("click", onBack);
 document.addEventListener("keydown", function (e) {
-  if (el("setSheet").classList.contains("open")) return;
+  if (document.querySelector(".sheet.open")) return;
   if (e.key === "ArrowRight") { e.preventDefault(); onSkip(); }
   else if (e.key === " " || e.key === "Enter") { e.preventDefault(); onMain(); }
   else if (e.key === "ArrowLeft") { e.preventDefault(); onBack(); }
@@ -542,29 +678,76 @@ el("tab2").addEventListener("click", function () { tab = 2; updateColorUI(false)
 });
 
 /* ---------- настройки: остальное ---------- */
-function syncSettings() {
-  document.querySelectorAll("#chips button").forEach(function (b) { b.className = state[b.getAttribute("data-k")] ? "sel" : ""; });
-  document.querySelectorAll("#segColors button").forEach(function (b) {
-  b.addEventListener("click", function () {
-    var on = b.getAttribute("data-v") === "1";
-    if (on === state.randColors) return;
-    state.randColors = on;
-    if (on && state.cur) { var rc = randomColors(); state.cur.c1 = rc[0]; state.cur.c2 = rc[1]; }
-    save(); syncSettings(); render({ pop: false });
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+function normS(s) { return s.toLowerCase().replace(/ё/g, "е"); }
+function resetPairs() { deck = []; polDeck = []; hist = []; state.cur = null; state.pairNo = 0; remaining = 0; }
+function setSegSel(sel, test) {
+  document.querySelectorAll(sel + " button").forEach(function (b) { b.className = test(b.getAttribute("data-v")) ? "sel" : ""; });
+}
+function renderCatList() {
+  var box = el("catList");
+  box.innerHTML = "";
+  var total = state.pol.custom.length;
+  POL.forEach(function (c) { total += c.pairs.length; });
+  var items = [{ id: "all", label: "Все полярности", n: total }];
+  POL.forEach(function (c) { items.push({ id: c.name, label: c.name, n: c.pairs.length }); });
+  if (state.pol.custom.length) items.push({ id: "custom", label: "Мои пары", n: state.pol.custom.length });
+  items.forEach(function (it) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = state.pol.cat === it.id ? "sel" : "";
+    b.innerHTML = "<span>" + esc(it.label) + "</span><small>" + it.n + "</small>";
+    b.addEventListener("click", function () { setCat(it.id); });
+    box.appendChild(b);
   });
-});
-document.querySelectorAll("#segOrder button").forEach(function (b) { b.className = (b.getAttribute("data-v") === "1") === state.randLayout ? "sel" : ""; });
-  document.querySelectorAll("#segPair button").forEach(function (b) { b.className = b.getAttribute("data-v") === state.newPair ? "sel" : ""; });
-  document.querySelectorAll("#segAuto button").forEach(function (b) { b.className = (b.getAttribute("data-v") === "1") === state.auto ? "sel" : ""; });
-  document.querySelectorAll("#segColors button").forEach(function (b) { b.className = (b.getAttribute("data-v") === "1") === state.randColors ? "sel" : ""; });
+}
+function renderPinInfo() {
+  var box = el("pinInfo"), p = state.pol.pinned;
+  box.innerHTML = "";
+  if (!p) { box.innerHTML = '<p class="note">Пара не закреплена: пары идут по выбранной категории.</p>'; return; }
+  var d = document.createElement("div");
+  d.className = "pin";
+  d.textContent = "Закреплена: " + p.a + " — " + p.b;
+  box.appendChild(d);
+  var row = document.createElement("div");
+  row.className = "row";
+  var b = document.createElement("button");
+  b.type = "button"; b.className = "btn"; b.textContent = "Снять закрепление";
+  b.addEventListener("click", function () { state.pol.pinned = null; resetPairs(); save(); syncSettings(); });
+  row.appendChild(b); box.appendChild(row);
+}
+function syncSettings() {
+  var pol = state.source === "polarities";
+  setSegSel("#segSource", function (v) { return v === state.source; });
+  el("polBox").style.display = pol ? "" : "none";
+  el("emoBox").style.display = pol ? "none" : "";
+  el("btnBuiltin").style.display = pol ? "none" : "";
+  setSegSel("#segPolOrder", function (v) { return v === state.pol.order; });
+  var names = pol ? { "2": "Оба полюса", "1": "Один полюс", "0": "Без слов" } : { "2": "Две эмоции", "1": "Одна эмоция", "0": "Без слов" };
+  document.querySelectorAll("#segWords button").forEach(function (b) {
+    var v = b.getAttribute("data-v");
+    b.textContent = names[v];
+    b.className = parseInt(v, 10) === state.words ? "sel" : "";
+  });
+  el("wordsNote").textContent = state.words === 2
+    ? (pol ? "В каждой зоне свой полюс." : "В каждой зоне своя эмоция.")
+    : (state.words === 1
+      ? (pol ? "Показывается один полюс в зоне первого цвета, вторая зона пустая. Слово едет по экрану вместе со своим цветом." : "Одно слово-эмоция в зоне первого цвета, вторая зона пустая. Слово едет по экрану вместе со своим цветом.")
+      : "Слова скрыты, остаются только цветные зоны и их расположение.");
+  setSegSel("#segColors", function (v) { return (v === "1") === state.randColors; });
   el("colorBox").className = state.randColors ? "dim" : "";
   el("colorNote").textContent = state.randColors
     ? "При каждом шаге обе зоны получают новые случайные цвета вместе с новым расположением. Выбранные ниже цвета сейчас не используются."
-    : "Две зоны имеют ваши цвета. Они остаются у своих эмоций при смене расположения.";
+    : "Две зоны имеют ваши цвета. Они остаются у своих слов при смене расположения.";
+  document.querySelectorAll("#chips button").forEach(function (b) { b.className = state[b.getAttribute("data-k")] ? "sel" : ""; });
+  setSegSel("#segOrder", function (v) { return (v === "1") === state.randLayout; });
+  setSegSel("#segPair", function (v) { return v === state.newPair; });
+  setSegSel("#segAuto", function (v) { return (v === "1") === state.auto; });
   el("autoBox").style.display = state.auto ? "" : "none";
   el("minVal").textContent = state.minS + " с";
   el("maxVal").textContent = state.maxS + " с";
-  el("info").textContent = "Эмоций в списке: " + state.items.length + ".";
+  el("info").textContent = pol ? "Пар в выбранной категории: " + polList().length + "." : "Эмоций в списке: " + state.items.length + ".";
+  if (pol) { renderCatList(); renderPinInfo(); }
   updateColorUI(false);
 }
 function openSettings() {
@@ -582,6 +765,97 @@ function closeSettings() {
 el("btnSettings").addEventListener("click", openSettings);
 el("btnClose").addEventListener("click", closeSettings);
 
+/* что показывать */
+document.querySelectorAll("#segSource button").forEach(function (b) {
+  b.addEventListener("click", function () {
+    var v = b.getAttribute("data-v");
+    if (v === state.source) return;
+    state.source = v; resetPairs(); save(); syncSettings();
+  });
+});
+function setCat(id) {
+  state.pol.cat = id; state.pol.pinned = null; state.pol.ptr = 0;
+  resetPairs(); save(); syncSettings();
+}
+document.querySelectorAll("#segPolOrder button").forEach(function (b) {
+  b.addEventListener("click", function () { state.pol.order = b.getAttribute("data-v"); polDeck = []; save(); syncSettings(); });
+});
+function pinPair(a, b) {
+  var list = polList(), idx = -1;
+  for (var i = 0; i < list.length; i++) if (list[i].a === a && list[i].b === b) { idx = i; break; }
+  state.pol.pinned = { a: a, b: b };
+  if (idx >= 0) state.pol.ptr = idx + 1;
+  resetPairs(); save();
+}
+function deleteCustom(p) {
+  state.pol.custom = state.pol.custom.filter(function (x) { return !(x.a === p.a && x.b === p.b); });
+  var pn = state.pol.pinned;
+  if (pn && pn.a === p.a && pn.b === p.b) state.pol.pinned = null;
+  if (state.pol.cat === "custom" && !state.pol.custom.length) state.pol.cat = "all";
+  polDeck = []; resetPairs(); save();
+}
+function renderPick() {
+  var q = normS(el("pickSearch").value.trim()), box = el("pickList"), shown = 0;
+  box.innerHTML = "";
+  var groups = POL.map(function (c) { return { name: c.name, pairs: c.pairs, custom: false }; });
+  if (state.pol.custom.length) groups.push({ name: "Мои пары", pairs: state.pol.custom, custom: true });
+  groups.forEach(function (g) {
+    var rows = g.pairs.filter(function (p) { return !q || normS(p.a + " " + p.b).indexOf(q) >= 0; });
+    if (!rows.length) return;
+    var h = document.createElement("div");
+    h.className = "ghead"; h.textContent = g.name + " · " + rows.length;
+    box.appendChild(h);
+    rows.forEach(function (p) {
+      var row = document.createElement("div");
+      row.className = "prow";
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "pbtn"; b.textContent = p.a + " — " + p.b;
+      b.addEventListener("click", function () { pinPair(p.a, p.b); el("pickSheet").classList.remove("open"); syncSettings(); });
+      row.appendChild(b);
+      if (g.custom) {
+        var x = document.createElement("button");
+        x.type = "button"; x.className = "pdel"; x.textContent = "×"; x.setAttribute("aria-label", "Удалить пару");
+        x.addEventListener("click", function () { deleteCustom(p); renderPick(); syncSettings(); });
+        row.appendChild(x);
+      }
+      box.appendChild(row); shown++;
+    });
+  });
+  if (!shown) box.innerHTML = '<p class="note">Ничего не найдено.</p>';
+}
+el("btnPickPair").addEventListener("click", function () {
+  el("pickSearch").value = ""; renderPick(); el("pickSheet").classList.add("open");
+});
+el("btnPickClose").addEventListener("click", function () { el("pickSheet").classList.remove("open"); });
+el("pickSearch").addEventListener("input", renderPick);
+el("btnAddPair").addEventListener("click", function () {
+  var a = cap(el("inA").value.replace(/\s+/g, " ").trim()), b = cap(el("inB").value.replace(/\s+/g, " ").trim()), msg = el("pairStatus");
+  if (!a || !b) { msg.textContent = "Заполните оба поля."; return; }
+  if (normS(a) === normS(b)) { msg.textContent = "Полюсы должны отличаться."; return; }
+  var exists = state.pol.custom.some(function (p) { return normS(p.a) === normS(a) && normS(p.b) === normS(b); });
+  if (!exists) state.pol.custom.push({ a: a, b: b, cat: "Мои пары" });
+  pinPair(a, b);
+  el("inA").value = ""; el("inB").value = "";
+  msg.textContent = "Готово: «" + a + " — " + b + "» сохранена в «Мои пары» и закреплена. Закройте настройки, чтобы её увидеть.";
+  syncSettings();
+});
+
+/* цвета, слова, расположение */
+document.querySelectorAll("#segColors button").forEach(function (b) {
+  b.addEventListener("click", function () {
+    var on = b.getAttribute("data-v") === "1";
+    if (on === state.randColors) return;
+    state.randColors = on;
+    if (on && state.cur) { var rc = randomColors(); state.cur.c1 = rc[0]; state.cur.c2 = rc[1]; }
+    save(); syncSettings(); render({ pop: false });
+  });
+});
+document.querySelectorAll("#segWords button").forEach(function (b) {
+  b.addEventListener("click", function () {
+    state.words = parseInt(b.getAttribute("data-v"), 10);
+    save(); syncSettings(); render({ pop: true });
+  });
+});
 document.querySelectorAll("#chips button").forEach(function (b) {
   b.addEventListener("click", function () {
     var k = b.getAttribute("data-k");
@@ -613,8 +887,8 @@ el("maxMinus").addEventListener("click", function () { setMax(state.maxS - 1); }
 el("maxPlus").addEventListener("click", function () { setMax(state.maxS + 1); });
 
 function freshStart() {
-  pauseRun(); remaining = 0; resumeAfter = false; deck = []; hist = [];
-  state.cur = null; state.pairNo = 0; state.ptr = 0;
+  pauseRun(); resumeAfter = false; resetPairs();
+  state.ptr = 0; state.pol.ptr = 0;
 }
 el("btnRestart").addEventListener("click", function () {
   freshStart(); save(); el("setSheet").classList.remove("open"); render({ pop: true });
