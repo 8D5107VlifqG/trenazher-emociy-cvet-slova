@@ -66,6 +66,17 @@ button { touch-action: manipulation; -webkit-user-select: none; user-select: non
 .ghead { margin: 18px 0 6px; color: var(--muted); font-size: 13px; letter-spacing: .04em; text-transform: uppercase; }
 .prow { display: flex; gap: 8px; margin-bottom: 6px; }
 .pbtn { flex: 1; text-align: left; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font: inherit; font-size: 16px; cursor: pointer; }
+.wrow { display: flex; flex-direction: column; align-items: stretch; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin: 8px 0; }
+.wrow.on { border-color: var(--accent); }
+.wrow .wl { color: var(--muted); font-size: 13px; margin-bottom: 2px; }
+.wrow .wv { font-size: 19px; font-weight: 600; overflow-wrap: break-word; }
+.wbtns { display: flex; gap: 8px; }
+.wbtns .btn { flex: 1; padding: 11px 14px; font-size: 15px; }
+.wbtns .btn:disabled { opacity: .4; }
+.pbtn.cur { border-color: var(--accent); }
+.pbtn.static { cursor: default; }
+.btn.danger { background: #9c2f2f; border-color: #9c2f2f; color: #fff; }
+.pdel.armed { width: auto; padding: 0 12px; font-size: 15px; background: #9c2f2f; border-color: #9c2f2f; color: #fff; }
 .pdel { width: 48px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 12px; font-size: 22px; cursor: pointer; }
 .top button { background: none; border: 1px solid var(--line); color: var(--muted); font: inherit; padding: 8px 14px; border-radius: 10px; cursor: pointer; }
 .progress { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; margin-bottom: 8px; }
@@ -184,7 +195,8 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
       </div>
       <h3>Отдельная пара</h3>
       <div id="pinInfo"></div>
-      <div class="row"><button class="btn" id="btnPickPair" type="button">Выбрать пару из списка</button></div>
+      <div class="row"><button class="btn" id="btnPickPair" type="button">Выбрать или удалить пару</button></div>
+      <div class="row" id="rowRestorePol"><button class="btn" id="btnRestorePol" type="button">Вернуть удалённые пары</button></div>
       <h3>Своя пара</h3>
       <input class="inp" id="inA" type="text" maxlength="80" placeholder="Первый полюс, например: Любовь" autocomplete="off">
       <input class="inp" id="inB" type="text" maxlength="80" placeholder="Второй полюс, например: Страх" autocomplete="off">
@@ -249,9 +261,20 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
     </div>
 
     <div id="emoBox">
-      <h2>Загрузить свой список</h2>
-      <p class="note">Файл .txt, одна эмоция в строке. Повторы убираются.</p>
-      <div class="row"><button class="btn primary" id="btnPick" type="button">Выбрать файл</button></div>
+      <h2>Список эмоций</h2>
+      <h3>Проработка выбранных эмоций</h3>
+      <div id="emoWork"></div>
+      <h3>Удалить из списка</h3>
+      <div class="row"><button class="btn" id="btnDelEmo" type="button">Удалить эмоцию из списка</button></div>
+      <h3>Своя эмоция</h3>
+      <input class="inp" id="inEmo" type="text" maxlength="60" placeholder="Название эмоции, например: Азарт" autocomplete="off">
+      <div class="row"><button class="btn primary" id="btnAddEmo" type="button">Добавить в список</button></div>
+      <div class="status" id="emoStatus"></div>
+      <div class="row" id="rowRestoreEmo"><button class="btn" id="btnRestoreEmo" type="button">Вернуть удалённые эмоции</button></div>
+      <div class="row" id="rowUndoEmo"><button class="btn primary" id="btnUndoEmo" type="button">Отменить сброс списка</button></div>
+      <h3>Эмоции из файла</h3>
+      <p class="note">Файл .txt, одна эмоция в строке. «Добавить» кладёт эмоции из файла в ваш список: все ваши правки сохраняются, повторы пропускаются. «Заменить» целиком меняет список на содержимое файла, ваши правки при этом сбрасываются (это можно отменить).</p>
+      <div class="row"><button class="btn primary" id="btnPick" type="button">Добавить эмоции из файла</button><button class="btn" id="btnPickReplace" type="button">Заменить список файлом</button></div>
       <input type="file" id="filePick" accept=".txt,text/plain" hidden>
       <div class="status" id="loadStatus"></div>
     </div>
@@ -259,9 +282,10 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
     <h2>Прогресс</h2>
     <div class="row">
       <button class="btn" id="btnRestart" type="button">Начать сначала</button>
-      <button class="btn" id="btnBuiltin" type="button">Вернуть встроенный список</button>
+      <button class="btn" id="btnBuiltin" type="button">Сбросить список эмоций</button>
       <button class="btn" id="btnTheme" type="button">Тема: тёмная</button>
     </div>
+    <p class="note">«Сбросить список эмоций» возвращает исходный список и убирает ваши добавления и удаления. Кнопка срабатывает со второго нажатия, и сброс можно отменить.</p>
     <p class="note" id="info"></p>
   </div>
 </div>
@@ -269,7 +293,8 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 <div class="sheet" id="pickSheet" role="dialog" aria-label="Выбор пары">
   <div class="bar"><button type="button" id="btnPickClose">Закрыть</button></div>
   <div class="sheet-inner">
-    <h2>Выбор пары</h2>
+    <h2 id="pickTitle">Выбор пары</h2>
+    <p class="note" id="pickNote"></p>
     <input class="inp" id="pickSearch" type="search" placeholder="Поиск по словам" autocomplete="off">
     <div id="pickList"></div>
   </div>
@@ -281,12 +306,14 @@ var DEFAULT_POL = [{"name": "Актуальные полярности", "items"
 
 var KEY = "emotionpairs.v1";
 var state = {
-  items: DEFAULT_ITEMS, src: "builtin", theme: "dark", source: "emotions",
+  items: DEFAULT_ITEMS, base: DEFAULT_ITEMS, emo: { removed: [], added: [], pinned: null, pinned2: null },
+  src: "builtin", theme: "dark", source: "emotions",
   c1: "#35629e", c2: "#2e8a86",
   hor: true, ver: true, diag: true,
   words: 2, randLayout: false, randColors: false, newPair: "after",
   auto: false, minS: 3, maxS: 8,
-  pol: { cat: "all", order: "list", pinned: null, custom: [], ptr: 0 },
+  pol: { cat: "all", order: "list", pinned: null, custom: [], removed: [], ptr: 0 },
+  undo: null,
   cur: null, ptr: 0, pairNo: 0
 };
 
@@ -303,14 +330,28 @@ var POL = DEFAULT_POL.map(function (c) {
   return { name: c.name, pairs: pairs };
 });
 var CAT_SHORT = { "Актуальные полярности": "Актуальные", "Фундаментальные полярности": "Фундаментальные", "Древние полярности": "Древние", "Полезные": "Полезные" };
+function polKey(p) { return p.a + "|" + p.b; }
+function polRemoved(p) { return state.pol.removed.indexOf(polKey(p)) >= 0; }
+function polPairsOf(c) { return c.pairs.filter(function (p) { return !polRemoved(p); }); }
 function polList() {
   var out = [], cat = state.pol.cat;
-  POL.forEach(function (c) { if (cat === "all" || cat === c.name) c.pairs.forEach(function (p) { out.push(p); }); });
+  POL.forEach(function (c) { if (cat === "all" || cat === c.name) polPairsOf(c).forEach(function (p) { out.push(p); }); });
   if (cat === "all" || cat === "custom") state.pol.custom.forEach(function (p) { out.push(p); });
   return out;
 }
 function ready() {
-  return state.source === "polarities" ? (!!state.pol.pinned || polList().length > 0) : state.items.length >= 2;
+  return state.source === "polarities" ? (!!state.pol.pinned || polList().length > 0) : state.items.length >= (state.words === 1 ? 1 : 2);
+}
+/* итоговый список эмоций = базовый минус удалённые плюс добавленные */
+function rebuildItems() {
+  var rm = {}, seen = {}, out = [];
+  state.emo.removed.forEach(function (x) { rm[normS(x)] = 1; });
+  state.base.concat(state.emo.added).forEach(function (t) {
+    var k = normS(t);
+    if (rm[k] || seen[k]) return;
+    seen[k] = 1; out.push(t);
+  });
+  state.items = out;
 }
 var tab = 1;                         // какой цвет сейчас правится в палитре
 var deck = [], polDeck = [], hist = [];
@@ -380,10 +421,10 @@ function save() {
       hor: state.hor, ver: state.ver, diag: state.diag,
       words: state.words, randLayout: state.randLayout, randColors: state.randColors, newPair: state.newPair,
       auto: state.auto, minS: state.minS, maxS: state.maxS,
-      pol: state.pol,
+      pol: state.pol, emo: state.emo, undo: state.undo,
       cur: state.cur, ptr: state.ptr, pairNo: state.pairNo
     };
-    if (state.src === "custom") s.items = state.items;
+    if (state.src === "custom") s.items = state.base;
     localStorage.setItem(KEY, JSON.stringify(s));
   } catch (e) {}
 }
@@ -396,7 +437,7 @@ function load() {
     if (!raw) return;
     var s = JSON.parse(raw);
     if (!s) return;
-    if (s.src === "custom" && s.items && s.items.length) { state.items = s.items; state.src = "custom"; }
+    if (s.src === "custom" && s.items && s.items.length) { state.base = s.items; state.src = "custom"; }
     state.source = s.source === "polarities" ? "polarities" : "emotions";
     state.theme = s.theme || "dark";
     if (isHex(s.c1)) state.c1 = s.c1;
@@ -415,7 +456,21 @@ function load() {
       state.pol.order = p.order === "random" ? "random" : "list";
       if (p.pinned && isStr(p.pinned.a) && isStr(p.pinned.b)) state.pol.pinned = { a: p.pinned.a, b: p.pinned.b };
       state.pol.ptr = parseInt(p.ptr, 10) || 0;
+      if (Array.isArray(p.removed)) state.pol.removed = p.removed.filter(isStr);
     }
+    var e = s.emo;
+    if (e) {
+      if (Array.isArray(e.removed)) state.emo.removed = e.removed.filter(isStr);
+      if (Array.isArray(e.added)) state.emo.added = e.added.filter(isStr);
+      if (isStr(e.pinned)) state.emo.pinned = e.pinned;
+      if (isStr(e.pinned2) && isStr(e.pinned)) state.emo.pinned2 = e.pinned2;
+    }
+    var u = s.undo;
+    if (u && u.emo && Array.isArray(u.emo.removed) && Array.isArray(u.emo.added)) {
+      state.undo = { src: u.src === "custom" ? "custom" : "builtin", base: Array.isArray(u.base) ? u.base.filter(isStr) : null,
+        emo: { removed: u.emo.removed.filter(isStr), added: u.emo.added.filter(isStr), pinned: isStr(u.emo.pinned) ? u.emo.pinned : null, pinned2: isStr(u.emo.pinned2) ? u.emo.pinned2 : null } };
+    }
+    rebuildItems();
     var c = s.cur, n = state.items.length;
     var okTxt = c && isStr(c.ta) && isStr(c.tb), okIdx = c && c.a >= 0 && c.a < n && c.b >= 0 && c.b < n;
     var wantPol = state.source === "polarities";
@@ -473,10 +528,23 @@ function polPair() {
   }
   return { a: list[idx].a, b: list[idx].b, lbl: lbl, pos: idx + 1, n: list.length, cov: cov };
 }
+function findEmo(t) {
+  for (var i = 0; i < state.items.length; i++) if (normS(state.items[i]) === normS(t)) return i;
+  return -1;
+}
 function emoPair() {
-  var n = state.items.length, a = drawOne(), b;
-  do { b = drawOne(); } while (b === a && n > 1);
-  return { a: state.items[a], b: state.items[b] };
+  var n = state.items.length, single = state.words === 1, a, b, pin = false;
+  var i1 = state.emo.pinned ? findEmo(state.emo.pinned) : -1;
+  var i2 = state.emo.pinned2 ? findEmo(state.emo.pinned2) : -1;
+  if (state.words === 2 && i1 >= 0 && i2 >= 0 && i1 !== i2) return { a: state.items[i1], b: state.items[i2], pin: "pair" };
+  if (single && i1 >= 0) { a = i1; pin = true; } else a = drawOne();
+  if (single) {
+    b = a;
+    if (n > 1) { do { b = Math.floor(Math.random() * n); } while (b === a); }
+  } else {
+    do { b = drawOne(); } while (b === a && n > 1);
+  }
+  return { a: state.items[a], b: state.items[b], pin: pin };
 }
 function makePair() {
   var pol = state.source === "polarities";
@@ -485,6 +553,7 @@ function makePair() {
   state.pairNo++;
   var q = buildQueue();
   var cur = { ta: pr.a, tb: pr.b, layout: null, queue: q, total: q.length, no: state.pairNo };
+  if (!pol && pr.pin) cur.pinE = pr.pin;
   if (pol) { cur.src = "pol"; cur.lbl = pr.lbl; cur.pos = pr.pos; cur.n = pr.n; cur.cov = pr.cov; cur.pinned = !!state.pol.pinned; cur.order = state.pol.order; }
   return cur;
 }
@@ -561,7 +630,7 @@ function barFraction(cur) {
 function render(opts) {
   var cur = state.cur;
   if (!ready()) {
-    el("counterTop").textContent = state.source === "polarities" ? "Нет пар" : "";
+    el("counterTop").textContent = state.source === "polarities" ? "Нет пар" : "Мало эмоций (нужно минимум 2)";
     return;
   }
   if (!cur) { nextStep(); return; }
@@ -577,6 +646,7 @@ function render(opts) {
   }
   var tail = cur.total > 1 ? " · " + (cur.total - cur.queue.length) + " из " + cur.total : "", head;
   if (cur.src === "pol") head = cur.pinned ? "Закреплена" : (cur.order === "random" ? cur.lbl : cur.lbl + " " + cur.pos + "/" + cur.n);
+  else if (cur.pinE) head = cur.pinE === "pair" ? "Закреплена пара" : "Закреплена";
   else head = (state.words === 2 ? "Пара " : (state.words === 1 ? "Слово " : "Круг ")) + cur.no;
   el("counterTop").textContent = head + tail;
   el("barWrap").classList.toggle("hidden", state.auto);
@@ -688,9 +758,9 @@ function renderCatList() {
   var box = el("catList");
   box.innerHTML = "";
   var total = state.pol.custom.length;
-  POL.forEach(function (c) { total += c.pairs.length; });
+  POL.forEach(function (c) { total += polPairsOf(c).length; });
   var items = [{ id: "all", label: "Все полярности", n: total }];
-  POL.forEach(function (c) { items.push({ id: c.name, label: c.name, n: c.pairs.length }); });
+  POL.forEach(function (c) { var n = polPairsOf(c).length; if (n) items.push({ id: c.name, label: c.name, n: n }); });
   if (state.pol.custom.length) items.push({ id: "custom", label: "Мои пары", n: state.pol.custom.length });
   items.forEach(function (it) {
     var b = document.createElement("button");
@@ -730,9 +800,9 @@ function syncSettings() {
     b.className = parseInt(v, 10) === state.words ? "sel" : "";
   });
   el("wordsNote").textContent = state.words === 2
-    ? (pol ? "В каждой зоне свой полюс." : "В каждой зоне своя эмоция.")
+    ? (pol ? "В каждой зоне свой полюс." : "В каждой зоне своя эмоция. Обе эмоции пары можно выбрать вручную ниже, в «Списке эмоций».")
     : (state.words === 1
-      ? (pol ? "Показывается один полюс в зоне первого цвета, вторая зона пустая. Слово едет по экрану вместе со своим цветом." : "Одно слово-эмоция в зоне первого цвета, вторая зона пустая. Слово едет по экрану вместе со своим цветом.")
+      ? (pol ? "Показывается один полюс в зоне первого цвета, вторая зона пустая. Слово едет по экрану вместе со своим цветом." : "Одно слово-эмоция в зоне первого цвета, вторая зона пустая. Слово едет по экрану вместе со своим цветом. Конкретную эмоцию можно выбрать ниже в «Списке эмоций».")
       : "Слова скрыты, остаются только цветные зоны и их расположение.");
   setSegSel("#segColors", function (v) { return (v === "1") === state.randColors; });
   el("colorBox").className = state.randColors ? "dim" : "";
@@ -747,7 +817,18 @@ function syncSettings() {
   el("minVal").textContent = state.minS + " с";
   el("maxVal").textContent = state.maxS + " с";
   el("info").textContent = pol ? "Пар в выбранной категории: " + polList().length + "." : "Эмоций в списке: " + state.items.length + ".";
-  if (pol) { renderCatList(); renderPinInfo(); }
+  if (pol) {
+    renderCatList(); renderPinInfo();
+    var nr = state.pol.removed.length;
+    el("rowRestorePol").style.display = nr ? "" : "none";
+    el("btnRestorePol").textContent = "Вернуть удалённые пары (" + nr + ")";
+  } else {
+    renderEmoWork();
+    var ne = state.emo.removed.length;
+    el("rowRestoreEmo").style.display = ne ? "" : "none";
+    el("btnRestoreEmo").textContent = "Вернуть удалённые эмоции (" + ne + ")";
+    el("rowUndoEmo").style.display = state.undo ? "" : "none";
+  }
   updateColorUI(false);
 }
 function openSettings() {
@@ -780,6 +861,16 @@ function setCat(id) {
 document.querySelectorAll("#segPolOrder button").forEach(function (b) {
   b.addEventListener("click", function () { state.pol.order = b.getAttribute("data-v"); polDeck = []; save(); syncSettings(); });
 });
+var pickMode = "pol";
+function armDelete(btn, fn) {
+  var armed = false, t = null;
+  btn.addEventListener("click", function () {
+    if (!armed) {
+      armed = true; btn.textContent = "Удалить?"; btn.classList.add("armed");
+      t = setTimeout(function () { armed = false; btn.textContent = "×"; btn.classList.remove("armed"); }, 3000);
+    } else { clearTimeout(t); fn(); }
+  });
+}
 function pinPair(a, b) {
   var list = polList(), idx = -1;
   for (var i = 0; i < list.length; i++) if (list[i].a === a && list[i].b === b) { idx = i; break; }
@@ -787,35 +878,84 @@ function pinPair(a, b) {
   if (idx >= 0) state.pol.ptr = idx + 1;
   resetPairs(); save();
 }
-function deleteCustom(p) {
-  state.pol.custom = state.pol.custom.filter(function (x) { return !(x.a === p.a && x.b === p.b); });
+function deletePair(p, isCustom) {
+  if (isCustom) state.pol.custom = state.pol.custom.filter(function (x) { return !(x.a === p.a && x.b === p.b); });
+  else { var k = polKey(p); if (state.pol.removed.indexOf(k) < 0) state.pol.removed.push(k); }
   var pn = state.pol.pinned;
   if (pn && pn.a === p.a && pn.b === p.b) state.pol.pinned = null;
-  if (state.pol.cat === "custom" && !state.pol.custom.length) state.pol.cat = "all";
+  if (state.pol.cat !== "all" && polList().length === 0) state.pol.cat = "all";
   polDeck = []; resetPairs(); save();
 }
+function pickFirst(t) {
+  state.emo.pinned = t;
+  if (state.emo.pinned2 && normS(state.emo.pinned2) === normS(t)) state.emo.pinned2 = null;
+  state.words = state.emo.pinned2 ? 2 : 1;
+  resetPairs(); save();
+}
+function pickSecond(t) {
+  state.emo.pinned2 = t; state.words = 2;
+  resetPairs(); save();
+}
+function clearFirst() { state.emo.pinned = null; state.emo.pinned2 = null; resetPairs(); save(); }
+function clearSecond() { state.emo.pinned2 = null; if (state.emo.pinned) state.words = 1; resetPairs(); save(); }
+function deleteEmotion(t) {
+  state.undo = null;
+  var k = normS(t);
+  state.emo.added = state.emo.added.filter(function (x) { return normS(x) !== k; });
+  var inBase = state.base.some(function (x) { return normS(x) === k; });
+  if (inBase && !state.emo.removed.some(function (x) { return normS(x) === k; })) state.emo.removed.push(t);
+  if (state.emo.pinned2 && normS(state.emo.pinned2) === k) state.emo.pinned2 = null;
+  if (state.emo.pinned && normS(state.emo.pinned) === k) { state.emo.pinned = null; state.emo.pinned2 = null; }
+  rebuildItems(); resetPairs(); save();
+}
+function pickGroups() {
+  var q = normS(el("pickSearch").value.trim()), groups = [];
+  if (pickMode.indexOf("emo") === 0) {
+    var addedK = {}, skip = (pickMode === "emo2" && state.emo.pinned) ? normS(state.emo.pinned) : null;
+    state.emo.added.forEach(function (x) { addedK[normS(x)] = 1; });
+    var items = state.items.filter(function (t) { return normS(t) !== skip; });
+    var main = items.filter(function (t) { return !addedK[normS(t)]; });
+    var mine = items.filter(function (t) { return addedK[normS(t)]; });
+    groups.push({ name: "Список эмоций", rows: main.map(function (t) { return { text: t, key: t }; }) });
+    groups.push({ name: "Мои эмоции", rows: mine.map(function (t) { return { text: t, key: t }; }) });
+  } else {
+    POL.forEach(function (c) { groups.push({ name: c.name, rows: polPairsOf(c).map(function (p) { return { text: p.a + " — " + p.b, key: p, custom: false }; }) }); });
+    groups.push({ name: "Мои пары", rows: state.pol.custom.map(function (p) { return { text: p.a + " — " + p.b, key: p, custom: true }; }) });
+  }
+  groups.forEach(function (g) { g.rows = g.rows.filter(function (r) { return !q || normS(r.text).indexOf(q) >= 0; }); });
+  return groups;
+}
 function renderPick() {
-  var q = normS(el("pickSearch").value.trim()), box = el("pickList"), shown = 0;
+  var box = el("pickList"), shown = 0, staticRows = pickMode === "emoDel", withDel = pickMode === "emoDel" || pickMode === "pol";
   box.innerHTML = "";
-  var groups = POL.map(function (c) { return { name: c.name, pairs: c.pairs, custom: false }; });
-  if (state.pol.custom.length) groups.push({ name: "Мои пары", pairs: state.pol.custom, custom: true });
-  groups.forEach(function (g) {
-    var rows = g.pairs.filter(function (p) { return !q || normS(p.a + " " + p.b).indexOf(q) >= 0; });
-    if (!rows.length) return;
+  pickGroups().forEach(function (g) {
+    if (!g.rows.length) return;
     var h = document.createElement("div");
-    h.className = "ghead"; h.textContent = g.name + " · " + rows.length;
+    h.className = "ghead"; h.textContent = g.name + " · " + g.rows.length;
     box.appendChild(h);
-    rows.forEach(function (p) {
+    g.rows.forEach(function (r) {
       var row = document.createElement("div");
       row.className = "prow";
-      var b = document.createElement("button");
-      b.type = "button"; b.className = "pbtn"; b.textContent = p.a + " — " + p.b;
-      b.addEventListener("click", function () { pinPair(p.a, p.b); el("pickSheet").classList.remove("open"); syncSettings(); });
+      var b = document.createElement(staticRows ? "div" : "button");
+      if (!staticRows) b.type = "button";
+      b.className = "pbtn" + (staticRows ? " static" : "");
+      b.textContent = r.text;
+      if (pickMode === "emo1" && state.emo.pinned && normS(r.text) === normS(state.emo.pinned)) b.className += " cur";
+      if (pickMode === "emo2" && state.emo.pinned2 && normS(r.text) === normS(state.emo.pinned2)) b.className += " cur";
+      if (!staticRows) b.addEventListener("click", function () {
+        if (pickMode === "emo1") pickFirst(r.key);
+        else if (pickMode === "emo2") pickSecond(r.key);
+        else pinPair(r.key.a, r.key.b);
+        el("pickSheet").classList.remove("open"); syncSettings();
+      });
       row.appendChild(b);
-      if (g.custom) {
+      if (withDel) {
         var x = document.createElement("button");
-        x.type = "button"; x.className = "pdel"; x.textContent = "×"; x.setAttribute("aria-label", "Удалить пару");
-        x.addEventListener("click", function () { deleteCustom(p); renderPick(); syncSettings(); });
+        x.type = "button"; x.className = "pdel"; x.textContent = "×"; x.setAttribute("aria-label", "Удалить");
+        armDelete(x, function () {
+          if (pickMode === "emoDel") deleteEmotion(r.key); else deletePair(r.key, !!r.custom);
+          renderPick(); syncSettings();
+        });
         row.appendChild(x);
       }
       box.appendChild(row); shown++;
@@ -823,11 +963,79 @@ function renderPick() {
   });
   if (!shown) box.innerHTML = '<p class="note">Ничего не найдено.</p>';
 }
-el("btnPickPair").addEventListener("click", function () {
-  el("pickSearch").value = ""; renderPick(); el("pickSheet").classList.add("open");
-});
+function openPicker(mode) {
+  pickMode = mode;
+  var titles = { pol: "Выбор пары", emo1: "Первая эмоция", emo2: "Вторая эмоция", emoDel: "Удалить эмоцию" };
+  var notes = {
+    pol: "Нажмите на пару, чтобы закрепить её. Крестик удаляет пару из списков, нажмите его дважды.",
+    emo1: "Нажмите на эмоцию, с которой хотите работать. На экране будет одна эмоция.",
+    emo2: "Нажмите на эмоцию, которая будет в паре с «" + (state.emo.pinned || "") + "». На экране появятся эти две эмоции.",
+    emoDel: "Крестик удаляет эмоцию из списка, нажмите его дважды. Удалённое можно вернуть в настройках."
+  };
+  el("pickTitle").textContent = titles[mode];
+  el("pickNote").textContent = notes[mode];
+  el("pickSearch").placeholder = mode === "pol" ? "Поиск по словам" : "Поиск по эмоциям";
+  el("pickSearch").value = "";
+  renderPick();
+  el("pickSheet").classList.add("open");
+}
+el("btnPickPair").addEventListener("click", function () { openPicker("pol"); });
+el("btnDelEmo").addEventListener("click", function () { openPicker("emoDel"); });
 el("btnPickClose").addEventListener("click", function () { el("pickSheet").classList.remove("open"); });
 el("pickSearch").addEventListener("input", renderPick);
+el("btnRestorePol").addEventListener("click", function () {
+  state.pol.removed = []; polDeck = []; save(); syncSettings();
+});
+function renderEmoWork() {
+  var box = el("emoWork"), e = state.emo;
+  box.innerHTML = "";
+  function addRow(label, value, onPick, onClear, canPick) {
+    var r = document.createElement("div");
+    r.className = "wrow" + (value ? " on" : "");
+    var left = document.createElement("div");
+    left.innerHTML = '<div class="wl">' + esc(label) + '</div><div class="wv">' + (value ? esc(value) : '<span style="color:var(--muted);font-weight:400">не выбрана</span>') + "</div>";
+    var btns = document.createElement("div");
+    btns.className = "wbtns";
+    var pick = document.createElement("button");
+    pick.type = "button"; pick.className = "btn"; pick.textContent = value ? "Сменить" : "Выбрать"; pick.disabled = !canPick;
+    pick.addEventListener("click", onPick);
+    btns.appendChild(pick);
+    if (value) {
+      var c = document.createElement("button");
+      c.type = "button"; c.className = "btn"; c.textContent = "Снять";
+      c.addEventListener("click", onClear);
+      btns.appendChild(c);
+    }
+    r.appendChild(left); r.appendChild(btns); box.appendChild(r);
+  }
+  addRow("1. Первая эмоция", e.pinned, function () { openPicker("emo1"); }, function () { clearFirst(); syncSettings(); }, true);
+  addRow("2. Вторая эмоция, в пару к первой", e.pinned2, function () { openPicker("emo2"); }, function () { clearSecond(); syncSettings(); }, !!e.pinned);
+  var msg;
+  if (!e.pinned) msg = "Выберите первую эмоцию для проработки: на экране будет только она. Потом можно добавить к ней вторую, и на экране появится пара из двух выбранных эмоций.";
+  else if (state.words === 0) msg = "Слова скрыты, остаются только цвета.";
+  else if (e.pinned2) msg = state.words === 2 ? "На экране пара из двух выбранных эмоций." : "Показывается только первая эмоция. Пара появится в режиме «Две эмоции».";
+  else msg = state.words === 1 ? "На экране одна эмоция. Добавьте вторую, чтобы работать с парой." : "Выбрана одна эмоция, она показывается в режиме «Одна эмоция». Добавьте вторую для режима «Две эмоции».";
+  var p = document.createElement("p");
+  p.className = "note"; p.textContent = msg;
+  box.appendChild(p);
+}
+el("btnAddEmo").addEventListener("click", function () {
+  var t = cap(el("inEmo").value.replace(/\s+/g, " ").trim()), msg = el("emoStatus");
+  state.undo = null;
+  if (!t) { msg.textContent = "Введите название эмоции."; return; }
+  var k = normS(t);
+  if (state.items.some(function (x) { return normS(x) === k; })) { msg.textContent = "Такая эмоция уже есть в списке."; return; }
+  state.emo.removed = state.emo.removed.filter(function (x) { return normS(x) !== k; });
+  var inBase = state.base.some(function (x) { return normS(x) === k; });
+  if (!inBase && !state.emo.added.some(function (x) { return normS(x) === k; })) state.emo.added.push(t);
+  rebuildItems(); deck = []; save();
+  el("inEmo").value = "";
+  msg.textContent = "Добавлено: «" + t + "». Эмоций в списке: " + state.items.length + ".";
+  syncSettings();
+});
+el("btnRestoreEmo").addEventListener("click", function () {
+  state.undo = null; state.emo.removed = []; rebuildItems(); resetPairs(); save(); syncSettings();
+});
 el("btnAddPair").addEventListener("click", function () {
   var a = cap(el("inA").value.replace(/\s+/g, " ").trim()), b = cap(el("inB").value.replace(/\s+/g, " ").trim()), msg = el("pairStatus");
   if (!a || !b) { msg.textContent = "Заполните оба поля."; return; }
@@ -852,7 +1060,9 @@ document.querySelectorAll("#segColors button").forEach(function (b) {
 });
 document.querySelectorAll("#segWords button").forEach(function (b) {
   b.addEventListener("click", function () {
+    var was = state.words;
     state.words = parseInt(b.getAttribute("data-v"), 10);
+    if (was !== state.words && state.source === "emotions" && state.emo.pinned && (state.words === 1 || (state.words === 2 && state.emo.pinned2))) resetPairs();
     save(); syncSettings(); render({ pop: true });
   });
 });
@@ -893,9 +1103,40 @@ function freshStart() {
 el("btnRestart").addEventListener("click", function () {
   freshStart(); save(); el("setSheet").classList.remove("open"); render({ pop: true });
 });
-el("btnBuiltin").addEventListener("click", function () {
-  freshStart(); state.items = DEFAULT_ITEMS; state.src = "builtin";
-  save(); el("setSheet").classList.remove("open"); render({ pop: true });
+function snapEmo() {
+  state.undo = JSON.parse(JSON.stringify({ src: state.src, base: state.src === "custom" ? state.base : null, emo: state.emo }));
+}
+function undoEmo() {
+  var u = state.undo;
+  if (!u) return;
+  state.src = u.src;
+  state.base = (u.src === "custom" && u.base && u.base.length) ? u.base : DEFAULT_ITEMS;
+  if (!(u.src === "custom" && u.base && u.base.length)) state.src = "builtin";
+  state.emo = u.emo; state.undo = null;
+  rebuildItems(); resetPairs(); save(); syncSettings();
+}
+function armButton(btn, armedText, fn) {
+  var orig = btn.textContent, armed = false, t = null;
+  btn.addEventListener("click", function () {
+    if (!armed) {
+      armed = true; btn.textContent = armedText; btn.classList.add("danger");
+      t = setTimeout(function () { armed = false; btn.textContent = orig; btn.classList.remove("danger"); }, 4000);
+    } else {
+      clearTimeout(t); armed = false; btn.textContent = orig; btn.classList.remove("danger");
+      fn();
+    }
+  });
+}
+armButton(el("btnBuiltin"), "Точно сбросить? Нажмите ещё раз", function () {
+  snapEmo();
+  freshStart(); state.base = DEFAULT_ITEMS; state.src = "builtin";
+  state.emo = { removed: [], added: [], pinned: null, pinned2: null }; rebuildItems();
+  save(); syncSettings();
+  el("loadStatus").textContent = "Список сброшен. Если это случайно, нажмите «Отменить сброс списка».";
+});
+el("btnUndoEmo").addEventListener("click", function () {
+  undoEmo();
+  el("loadStatus").textContent = "Сброс отменён: ваш список возвращён.";
 });
 function applyTheme() {
   var r = document.documentElement;
@@ -926,19 +1167,46 @@ function parseEmotions(text) {
   });
   return out;
 }
-var filePick = el("filePick");
-el("btnPick").addEventListener("click", function () { filePick.click(); });
+var filePick = el("filePick"), fileMode = "add";
+function mergeEmotions(items) {
+  var have = {}, added = 0, skipped = 0;
+  state.items.forEach(function (t) { have[normS(t)] = 1; });
+  items.forEach(function (t) {
+    var k = normS(t);
+    if (have[k]) { skipped++; return; }
+    state.emo.removed = state.emo.removed.filter(function (x) { return normS(x) !== k; });
+    var inBase = state.base.some(function (x) { return normS(x) === k; });
+    if (!inBase) state.emo.added.push(t);
+    have[k] = 1; added++;
+  });
+  state.undo = null;
+  rebuildItems(); deck = [];
+  return { added: added, skipped: skipped };
+}
+el("btnPick").addEventListener("click", function () { fileMode = "add"; filePick.click(); });
+el("btnPickReplace").addEventListener("click", function () { fileMode = "replace"; filePick.click(); });
 filePick.addEventListener("change", function () {
-  var f = filePick.files[0], msg = el("loadStatus");
+  var f = filePick.files[0], msg = el("loadStatus"), mode = fileMode;
   if (!f) return;
   var r = new FileReader();
   r.onload = function () {
     var items = parseEmotions(decode(r.result));
+    if (mode === "add") {
+      if (!items.length) { msg.textContent = "В файле не нашлось эмоций."; return; }
+      var res = mergeEmotions(items);
+      save(); syncSettings();
+      msg.textContent = res.added
+        ? "Добавлено новых эмоций: " + res.added + (res.skipped ? ", уже были в списке: " + res.skipped : "") + ". Всего в списке: " + state.items.length + ". Они в группе «Мои эмоции»."
+        : "Новых эмоций нет: все эмоции из файла уже есть в списке.";
+      return;
+    }
     if (items.length < 2) { msg.textContent = "Нужно минимум две эмоции."; return; }
+    snapEmo();
     freshStart();
-    state.items = items; state.src = "custom";
+    state.base = items; state.src = "custom";
+    state.emo = { removed: [], added: [], pinned: null, pinned2: null }; rebuildItems();
     save(); syncSettings(); render({ pop: true });
-    msg.textContent = "Готово: эмоций — " + items.length + (lastDupes ? ", повторов убрано — " + lastDupes : "") + ".";
+    msg.textContent = "Список заменён: эмоций — " + items.length + (lastDupes ? ", повторов убрано — " + lastDupes : "") + ". Если это случайно, нажмите «Отменить сброс списка».";
   };
   r.onerror = function () { msg.textContent = "Не удалось прочитать файл."; };
   r.readAsArrayBuffer(f);
