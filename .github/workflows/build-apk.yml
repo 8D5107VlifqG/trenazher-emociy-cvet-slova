@@ -27,6 +27,11 @@ jobs:
       - name: Add Android platform
         run: npx cap add android
 
+      - name: Support Android 6 and newer (minSdk 22)
+        run: |
+          sed -i 's/minSdkVersion = .*/minSdkVersion = 22/' android/variables.gradle
+          grep -n "minSdkVersion\|targetSdkVersion\|compileSdkVersion" android/variables.gradle
+
       - name: Apply icons and splash
         run: cp -r icons/res/. android/app/src/main/res/
 
@@ -38,6 +43,11 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
+
+      - name: Show minimum Android version of the APK
+        run: |
+          AAPT=$(ls $ANDROID_HOME/build-tools/*/aapt2 | sort -V | tail -1)
+          "$AAPT" dump badging android/app/build/outputs/apk/debug/app-debug.apk | grep -E "^package|sdkVersion|targetSdkVersion" || true
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
