@@ -12,3 +12,9 @@
 ## Изменить список
 Эмоции лежат в `www/index.html` в переменной `DEFAULT_ITEMS`.
 После правки сделайте commit: APK пересоберётся сам.
+
+## Какие Android поддерживаются
+Минимум Android 5.1 (API 22), то есть Android 6 тоже подходит. В логе сборки шаг
+«Show minimum Android version of the APK» печатает итоговый `sdkVersion`.
+На старых телефонах также должен быть обновлён «Android System WebView» (версия 60 и новее)
+через Google Play.
