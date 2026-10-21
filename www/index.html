@@ -58,11 +58,12 @@ main { flex: 1; min-height: 0; position: relative; }
   text-align: center;
   font-family: "Literata", Georgia, "Times New Roman", serif;
   font-weight: 600; line-height: 1.12; letter-spacing: -0.01em;
-  word-wrap: normal; overflow-wrap: normal; word-break: normal; -webkit-hyphens: none; hyphens: none;
+  word-wrap: normal; overflow-wrap: normal; word-break: normal; -webkit-hyphens: manual; hyphens: manual;
   -webkit-transition: left .55s cubic-bezier(.65,.05,.25,1), top .55s cubic-bezier(.65,.05,.25,1), color .55s ease;
   transition: left .55s cubic-bezier(.65,.05,.25,1), top .55s cubic-bezier(.65,.05,.25,1), color .55s ease;
 }
-.label span { display: inline-block; }
+.label span { display: block; }
+.label.brk { word-wrap: break-word; overflow-wrap: break-word; }
 .label.pop span { -webkit-animation: pop .35s ease-out; animation: pop .35s ease-out; }
 @-webkit-keyframes pop { from { opacity: 0; -webkit-transform: scale(.88); } to { opacity: 1; -webkit-transform: none; } }
 @keyframes pop { from { opacity: 0; transform: scale(.88); } to { opacity: 1; transform: none; } }
@@ -79,6 +80,12 @@ main { flex: 1; min-height: 0; position: relative; }
 .swipe.autoon .actions { display: flex; }
 .swipe.autoon #btnBack, .swipe.autoon #btnSkip { display: none; }
 .swipe.autoon #btnMain { margin-left: 0; }
+/* полный экран (только в режиме свайпов) */
+.swipe.full .top, .swipe.full .progress { display: none; }
+.swipe.full .app { max-width: none; padding: 0; }
+.swipe.full .stage { bottom: 0; border-radius: 0; }
+.swipe.full.autoon .stage { bottom: 0; }
+.swipe.full.autoon .actions { display: none; }
 
 /* шторки */
 .sheet { position: fixed; top: 0; right: 0; bottom: 0; left: 0; background: var(--bg); display: none; flex-direction: column; z-index: 10; padding-top: 0; padding-top: env(safe-area-inset-top, 0px); }
@@ -270,6 +277,22 @@ main { flex: 1; min-height: 0; position: relative; }
       </div>
     </div>
 
+    <h2>Размер слов</h2>
+    <div class="seg" id="segSame">
+      <button type="button" data-v="1">Одинаковый у двух слов</button>
+      <button type="button" data-v="0">Каждое по своей зоне</button>
+    </div>
+    <p class="note" id="sizeNote"></p>
+    <h3>По горизонтали</h3>
+    <div class="stepper"><button type="button" id="fszMinus_h" aria-label="Меньше">−</button><div class="val" id="fszVal_h">Авто</div><button type="button" id="fszPlus_h" aria-label="Больше">+</button></div>
+    <div class="slrow"><input type="range" id="fszRange_h" min="10" max="160" step="1" aria-label="Размер по горизонтали"><button class="btn" type="button" id="fszAuto_h" style="margin-left:10px;padding:10px 14px">Авто</button></div>
+    <h3>По вертикали</h3>
+    <div class="stepper"><button type="button" id="fszMinus_v" aria-label="Меньше">−</button><div class="val" id="fszVal_v">Авто</div><button type="button" id="fszPlus_v" aria-label="Больше">+</button></div>
+    <div class="slrow"><input type="range" id="fszRange_v" min="10" max="160" step="1" aria-label="Размер по вертикали"><button class="btn" type="button" id="fszAuto_v" style="margin-left:10px;padding:10px 14px">Авто</button></div>
+    <h3>По диагонали</h3>
+    <div class="stepper"><button type="button" id="fszMinus_d" aria-label="Меньше">−</button><div class="val" id="fszVal_d">Авто</div><button type="button" id="fszPlus_d" aria-label="Больше">+</button></div>
+    <div class="slrow"><input type="range" id="fszRange_d" min="10" max="160" step="1" aria-label="Размер по диагонали"><button class="btn" type="button" id="fszAuto_d" style="margin-left:10px;padding:10px 14px">Авто</button></div>
+
     <h2>Расположение</h2>
     <div class="chips" id="chips">
       <button type="button" data-k="hor">Горизонтально</button>
@@ -294,6 +317,14 @@ main { flex: 1; min-height: 0; position: relative; }
       <button type="button" data-v="swipe">Свайпы</button>
     </div>
     <p class="note" id="ctrlNote"></p>
+    <div id="fullBox">
+      <h3>Полный экран</h3>
+      <div class="seg" id="segFull">
+        <button type="button" data-v="0">Выкл</button>
+        <button type="button" data-v="1">Вкл</button>
+      </div>
+      <p class="note">Счётчик, полоска и кнопка «Настройки» скрыты, зоны занимают весь экран. Чтобы выключить полный экран, проведите пальцем снизу вверх по центру экрана: вернутся кнопка «Настройки» и кнопки «Старт/Пауза». Включить снова можно здесь. При автоперемещении в полном экране кнопок нет: «Старт/Пауза» переключается свайпом сверху вниз по центру экрана.</p>
+    </div>
 
     <h2>Автоперемещение</h2>
     <div class="seg" id="segAuto">
@@ -305,7 +336,7 @@ main { flex: 1; min-height: 0; position: relative; }
       <h3>Время</h3>
       <div class="stepper"><span class="lbl">От</span><button type="button" id="minMinus" aria-label="Меньше">−</button><div class="val" id="minVal">3 с</div><button type="button" id="minPlus" aria-label="Больше">+</button></div>
       <div class="stepper"><span class="lbl">До</span><button type="button" id="maxMinus" aria-label="Меньше">−</button><div class="val" id="maxVal">8 с</div><button type="button" id="maxPlus" aria-label="Больше">+</button></div>
-      <p class="note">Если «От» и «До» одинаковы, перемещение идёт строго через это число секунд. Если разные, время каждый раз случайное между ними. Диапазон от 2 до 30 секунд. Внизу появятся «Старт» и «Пауза».</p>
+      <p class="note">Если «От» и «До» одинаковы, перемещение идёт строго через это число секунд. Если разные, время каждый раз случайное между ними. Диапазон от 0,5 секунды до 10 минут (600 секунд): шаг 0,5 с до 5 секунд, дальше крупнее. Внизу появятся «Старт» и «Пауза».</p>
     </div>
     <div id="fwdBox">
       <h3>Что показывать по порядку</h3>
@@ -323,9 +354,10 @@ main { flex: 1; min-height: 0; position: relative; }
         <button type="button" data-v="v">Вертикально</button>
         <button type="button" data-v="d1">Диагональ 1</button>
         <button type="button" data-v="d2">Диагональ 2</button>
+        <button type="button" data-v="d3">Диагональ 3</button>
         <button type="button" data-v="d12">Обе диагонали</button>
       </div>
-      <p class="note">Слова одной пары сами меняются местами туда и обратно. Диагональ 1: между левым верхним и правым нижним углом. Диагональ 2: между правым верхним и левым нижним. «Обе диагонали»: по кругу через все четыре диагональных положения туда и обратно.</p>
+      <p class="note">Слова одной пары сами меняются местами туда и обратно. Диагональ 1: между левым верхним и правым нижним углом. Диагональ 2: между правым верхним и левым нижним. Диагональ 3: каждое слово остаётся на своей стороне, левое слева, правое справа, а по высоте они меняются местами: одно идёт вниз, другое вверх. «Обе диагонали»: по кругу через все четыре диагональных положения туда и обратно.</p>
     </div>
 
     <h2>Прогресс</h2>
@@ -377,8 +409,8 @@ var state = {
   emo: { removed: [], added: [], edits: {}, pinned: null, pinned2: null, order: "random", ptr: 0 },
   pol: { cat: "all", order: "list", pinned: null, custom: [], removed: [], edits: {}, ptr: 0 },
   c1: "#35629e", c2: "#2e8a86", hor: true, ver: true, diag: true,
-  words: 2, side: "first", randLayout: false, randColors: false, newPair: "after",
-  ctrl: "buttons", autoMode: "off", autoScope: "random", ppAxis: "h", minS: 3, maxS: 8,
+  words: 2, side: "first", sameSize: true, fsz: { h: 0, v: 0, d: 0 }, randLayout: false, randColors: false, newPair: "after",
+  ctrl: "buttons", full: false, autoMode: "off", autoScope: "random", ppAxis: "h", minS: 3, maxS: 8,
   undo: null, cur: null, ptr: 0, pairNo: 0
 };
 var emoMeta = {};
@@ -393,7 +425,28 @@ function normS(s) { return String(s).toLowerCase().replace(/ё/g, "е"); }
 function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
 function isStr(x) { return typeof x === "string" && x.length > 0; }
 function isHex(x) { return typeof x === "string" && /^#[0-9a-f]{6}$/i.test(x); }
-function clampS(v, d) { v = parseInt(v, 10); return (v >= 2 && v <= 30) ? v : d; }
+/* время автоперемещения: от 0,5 до 600 секунд, шаг сетки 0,5 с */
+var S_MIN = 0.5, S_MAX = 600;
+function clampS(v, d) { v = parseFloat(v); if (!(v >= S_MIN && v <= S_MAX)) return d; return Math.round(v * 2) / 2; }
+var S_LADDER = (function () {
+  var a = [], i;
+  for (i = 0.5; i <= 5; i += 0.5) a.push(i);
+  for (i = 6; i <= 30; i += 1) a.push(i);
+  for (i = 35; i <= 120; i += 5) a.push(i);
+  for (i = 130; i <= 600; i += 10) a.push(i);
+  return a;
+})();
+function stepS(v, dir) {
+  var i;
+  if (dir > 0) { for (i = 0; i < S_LADDER.length; i++) if (S_LADDER[i] > v) return S_LADDER[i]; return S_MAX; }
+  for (i = S_LADDER.length - 1; i >= 0; i--) if (S_LADDER[i] < v) return S_LADDER[i];
+  return S_MIN;
+}
+function fmtS(v) {
+  if (v < 60) return String(v).replace(".", ",") + " с";
+  var m = Math.floor(v / 60), r = v - m * 60;
+  return m + " мин" + (r ? " " + r + " с" : "");
+}
 function shuffle(a) {
   for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; }
   return a;
@@ -526,7 +579,7 @@ function save() {
       src: state.src, theme: state.theme, source: state.source, c1: state.c1, c2: state.c2,
       hor: state.hor, ver: state.ver, diag: state.diag,
       words: state.words, side: state.side, randLayout: state.randLayout, randColors: state.randColors, newPair: state.newPair,
-      ctrl: state.ctrl, autoMode: state.autoMode, autoScope: state.autoScope, ppAxis: state.ppAxis, minS: state.minS, maxS: state.maxS,
+      ctrl: state.ctrl, full: state.full, sameSize: state.sameSize, fsz: state.fsz, autoMode: state.autoMode, autoScope: state.autoScope, ppAxis: state.ppAxis, minS: state.minS, maxS: state.maxS,
       pol: state.pol, emo: state.emo, undo: state.undo,
       cur: state.cur, ptr: state.ptr, pairNo: state.pairNo
     };
@@ -559,10 +612,13 @@ function load() {
     state.words = (s.words === 0 || s.words === 1) ? s.words : 2;
     state.side = (s.side === "second" || s.side === "random") ? s.side : "first";
     state.ctrl = s.ctrl === "swipe" ? "swipe" : "buttons";
+    state.full = s.full === true;
+    state.sameSize = s.sameSize !== false;
+    if (s.fsz && typeof s.fsz === "object") ["h", "v", "d"].forEach(function (k) { var v = parseInt(s.fsz[k], 10); state.fsz[k] = (v >= 10 && v <= 160) ? v : 0; });
     if (s.autoMode === "fwd" || s.autoMode === "pp") state.autoMode = s.autoMode;
     else if (s.auto === true) state.autoMode = "fwd";
     state.autoScope = (s.autoScope === "one" || s.autoScope === "circle") ? s.autoScope : "random";
-    state.ppAxis = ({ h: 1, v: 1, d1: 1, d2: 1, d12: 1 })[s.ppAxis] ? s.ppAxis : "h";
+    state.ppAxis = ({ h: 1, v: 1, d1: 1, d2: 1, d3: 1, d12: 1 })[s.ppAxis] ? s.ppAxis : "h";
     state.minS = clampS(s.minS, 3); state.maxS = clampS(s.maxS, 8);
     if (state.minS > state.maxS) state.maxS = state.minS;
     state.ptr = s.ptr || 0; state.pairNo = s.pairNo || 0;
@@ -712,7 +768,7 @@ function rebuildQueue() {
 function resetPairs() { deck = []; polDeck = []; hist = []; state.cur = null; state.pairNo = 0; remaining = 0; }
 
 /* туда-обратно */
-function ppSeq() { return ({ h: ["H1", "H2"], v: ["V1", "V2"], d1: ["D1", "D2"], d2: ["D3", "D4"], d12: ["D1", "D2", "D3", "D4"] })[state.ppAxis]; }
+function ppSeq() { return ({ h: ["H1", "H2"], v: ["V1", "V2"], d1: ["D1", "D2"], d2: ["D3", "D4"], d3: ["D1", "D4"], d12: ["D1", "D2", "D3", "D4"] })[state.ppAxis]; }
 function ppStep() {
   var cur = state.cur;
   if (!cur) { nextStep(); return; }
@@ -730,37 +786,109 @@ function ppStep() {
 
 /* ---------- отрисовка ---------- */
 var stage = el("stage"), measure = el("measure");
-function fitFont(text, wPx, hPx) {
-  if (!(wPx > 0 && hPx > 0)) return 24;
+/* мягкие переносы: длинное слово может делиться на строки */
+var VOWELS = "аеёиоуыэюя";
+function hyphenWord(w) {
+  var lw = w.toLowerCase(), n = lw.length, cuts = [], i = 0, j, k, pos;
+  for (i = 0; i < n; i++) {
+    if (VOWELS.indexOf(lw.charAt(i)) < 0) continue;
+    j = i + 1;
+    while (j < n && VOWELS.indexOf(lw.charAt(j)) < 0) j++;
+    if (j >= n) break;
+    k = j - i - 1;
+    if (k === 0) pos = j;
+    else if (k === 1) pos = lw.charAt(i + 1) === "й" ? j : i + 1;
+    else { pos = j - 1; if (lw.charAt(pos) === "ь" || lw.charAt(pos) === "ъ") pos = j; }
+    if (pos >= 2 && n - pos >= 2 && cuts.indexOf(pos) < 0) cuts.push(pos);
+    i = j - 1;
+  }
+  cuts.sort(function (a, b) { return a - b; });
+  var out = "", last = 0;
+  cuts.forEach(function (c) { if (c - last >= 2 && n - c >= 2) { out += w.slice(last, c) + "\u00AD"; last = c; } });
+  return out + w.slice(last);
+}
+function hyphenText(t) { return t.replace(/[А-Яа-яЁё]{6,}/g, hyphenWord); }
+
+/* размеры шрифта */
+function famOf(slotName) { return (slotName === "L" || slotName === "R") ? "h" : ((slotName === "T" || slotName === "B") ? "v" : "d"); }
+function boxOf(slotName) {
+  var s = SLOTS[slotName];
+  return { w: s.w / 100 * stage.clientWidth, h: s.h / 100 * stage.clientHeight };
+}
+function fitsAt(text, fs, wPx, hPx) {
   var sp = measure.firstChild;
   measure.style.width = wPx + "px";
   sp.textContent = text;
-  var lo = 10, hi = Math.min(78, hPx);
-  for (var i = 0; i < 11; i++) {
+  measure.style.fontSize = fs + "px";
+  return measure.scrollWidth <= wPx + 1 && measure.scrollHeight <= hPx;
+}
+function fitFont(text, wPx, hPx) {
+  if (!(wPx > 0 && hPx > 0)) return 24;
+  var lo = 10, hi = Math.min(80, hPx);
+  for (var i = 0; i < 12; i++) {
     var mid = (lo + hi) / 2;
-    measure.style.fontSize = mid + "px";
-    if (sp.offsetWidth <= wPx - 1.5 && sp.offsetHeight <= hPx - 1) lo = mid; else hi = mid;
+    if (fitsAt(text, mid, wPx, hPx)) lo = mid; else hi = mid;
   }
   return Math.floor(lo);
 }
-function place(who, slotName, text, color, show, fs) {
+/* самый крупный шрифт для зоны: делится только то слово, которое при этом размере не помещается в строку */
+var unitCache = {};
+function unitW(word) {
+  if (unitCache[word] !== undefined) return unitCache[word];
+  var sp = measure.firstChild;
+  measure.style.width = ""; measure.style.whiteSpace = "nowrap"; measure.style.fontSize = "100px";
+  sp.textContent = word;
+  var w = measure.offsetWidth / 100;
+  measure.style.whiteSpace = "";
+  unitCache[word] = w;
+  return w;
+}
+function variantFor(text, fs, boxW) {
+  return text.split(" ").map(function (w) { return (unitW(w) * fs > boxW - 2) ? hyphenText(w) : w; }).join(" ");
+}
+function bestFit(slotName, text) {
+  var b = boxOf(slotName);
+  if (!(b.w > 0 && b.h > 0)) return { fs: 24, text: text };
+  var lo = 10, hi = Math.min(80, b.h);
+  for (var i = 0; i < 12; i++) {
+    var mid = (lo + hi) / 2;
+    if (fitsAt(variantFor(text, mid, b.w), mid, b.w, Math.min(b.h, mid * 1.12 * 3 + 1))) lo = mid; else hi = mid;     // не больше трёх строк
+  }
+  var fs = Math.floor(lo), v = variantFor(text, fs, b.w);
+  while (fs > 10 && !fitsAt(v, fs, b.w, Math.min(b.h, fs * 1.12 * 3 + 1))) { fs--; v = variantFor(text, fs, b.w); }
+  return { fs: fs, text: v };
+}
+function resolveFonts(L, ta, tb, showA, showB) {
+  var man = state.fsz[famOf(L.A)];
+  var res = { A: null, B: null }, bA = boxOf(L.A), bB = boxOf(L.B);
+  if (man > 0) {
+    if (showA) res.A = { fs: man, text: variantFor(ta, man, bA.w) };
+    if (showB) res.B = { fs: man, text: variantFor(tb, man, bB.w) };
+    return res;
+  }
+  var rA = showA ? bestFit(L.A, ta) : null, rB = showB ? bestFit(L.B, tb) : null;
+  if (rA && rB && state.sameSize) {
+    var fs = Math.min(rA.fs, rB.fs);
+    rA = { fs: fs, text: variantFor(ta, fs, bA.w) };
+    rB = { fs: fs, text: variantFor(tb, fs, bB.w) };
+  }
+  res.A = rA; res.B = rB;
+  return res;
+}
+function place(who, slotName, info, color, manual) {
   var s = SLOTS[slotName], zone = el("zone" + who), lbl = el("lbl" + who);
   var poly = "polygon(" + s.poly.map(function (p) { return p[0] + "% " + p[1] + "%"; }).join(",") + ")";
   zone.style.clipPath = poly; zone.style.webkitClipPath = poly;
   zone.style.backgroundColor = color;
-  lbl.style.display = show ? "" : "none";
-  if (!show) return;
-  var W = stage.clientWidth, H = stage.clientHeight;
-  var wPx = s.w / 100 * W, hPx = s.h / 100 * H;
+  lbl.style.display = info ? "" : "none";
+  if (!info) return;
+  var b = boxOf(slotName);
   lbl.style.left = s.cx + "%"; lbl.style.top = s.cy + "%";
-  lbl.style.width = (wPx > 0 ? wPx : 150) + "px";
-  lbl.style.fontSize = (fs || fitFont(text, wPx, hPx)) + "px";
+  lbl.style.width = (b.w > 0 ? b.w : 150) + "px";
+  lbl.style.fontSize = info.fs + "px";
   lbl.style.color = inkFor(color);
-  lbl.firstChild.textContent = text;
-}
-function slotFit(slotName, text) {
-  var s = SLOTS[slotName];
-  return fitFont(text, s.w / 100 * stage.clientWidth, s.h / 100 * stage.clientHeight);
+  if (manual) lbl.classList.add("brk"); else lbl.classList.remove("brk");
+  lbl.firstChild.textContent = info.text;
 }
 function barFraction(cur) {
   if (cur.src === "pol") {
@@ -771,7 +899,7 @@ function barFraction(cur) {
   return n ? (n - deck.length) / n : 0;
 }
 function applyBody() {
-  document.body.className = (state.ctrl === "swipe" ? "swipe" : "") + (autoOn() ? " autoon" : "");
+  document.body.className = (state.ctrl === "swipe" ? "swipe" : "") + (state.ctrl === "swipe" && state.full ? " full" : "") + (autoOn() ? " autoon" : "");
 }
 function render(opts) {
   applyBody();
@@ -787,10 +915,9 @@ function render(opts) {
   var side = cur.side === "B" ? "B" : "A";
   var showA = state.words === 2 || (state.words === 1 && side === "A");
   var showB = state.words === 2 || (state.words === 1 && side === "B");
-  var fA = showA ? slotFit(L.A, cur.ta) : 0, fB = showB ? slotFit(L.B, cur.tb) : 0;
-  if (showA && showB) { fA = fB = Math.min(fA, fB); }      // два слова: один размер, по меньшему
-  place("A", L.A, cur.ta, k1, showA, fA);
-  place("B", L.B, cur.tb, k2, showB, fB);
+  var fonts = resolveFonts(L, cur.ta, cur.tb, showA, showB), man = state.fsz[famOf(L.A)] > 0;
+  place("A", L.A, showA ? fonts.A : null, k1, man);
+  place("B", L.B, showB ? fonts.B : null, k2, man);
   if (opts && opts.pop) {
     ["lblA", "lblB"].forEach(function (id) { var l = el(id); l.classList.remove("pop"); void l.offsetWidth; l.classList.add("pop"); });
   }
@@ -816,7 +943,7 @@ function setControls() {
 }
 
 /* ---------- автоперемещение ---------- */
-function randDelay() { return (state.minS + Math.floor(Math.random() * (state.maxS - state.minS + 1))) * 1000; }
+function randDelay() { return (state.minS + Math.floor(Math.random() * Math.round((state.maxS - state.minS) * 2 + 1)) / 2) * 1000; }
 function autoTick() { if (state.autoMode === "pp") ppStep(); else nextStep(); }
 function schedule(ms) {
   clearTimeout(tmr);
@@ -856,9 +983,16 @@ document.addEventListener("keydown", function (e) {
 var sw = null;
 document.addEventListener("touchstart", function (e) {
   if (state.ctrl !== "swipe" || sheetOpen() || !e.touches || e.touches.length !== 1) { sw = null; return; }
-  var t = e.target;
-  if (t && t.closest && (t.closest(".top") || t.closest(".actions"))) { sw = null; return; }
-  sw = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() };
+  var t = e.target, x = e.touches[0].clientX, y = e.touches[0].clientY;
+  var W = window.innerWidth || document.documentElement.clientWidth, H = window.innerHeight || document.documentElement.clientHeight;
+  var nav = !(t && t.closest && (t.closest(".top") || t.closest(".actions")));
+  // выход из полного экрана: начало в нижней трети, по центру
+  var cx = x > W * 0.25 && x < W * 0.75;
+  var exit = state.full && y > H * 0.66 && cx;
+  // старт/пауза автоперемещения в полном экране: сверху вниз, в верхней трети по центру
+  var start = state.full && autoOn() && y < H * 0.34 && cx;
+  if (!nav && !exit && !start) { sw = null; return; }
+  sw = { x: x, y: y, t: Date.now(), nav: nav, exit: exit, start: start };
 }, false);
 document.addEventListener("touchend", function (e) {
   if (!sw || !e.changedTouches || !e.changedTouches.length) { sw = null; return; }
@@ -866,6 +1000,12 @@ document.addEventListener("touchend", function (e) {
   sw = null;
   var dx = c.clientX - s.x, dy = c.clientY - s.y;
   if (Date.now() - s.t > 900) return;
+  if (s.exit && dy < -70 && Math.abs(dy) > Math.abs(dx) * 1.4) {      // снизу вверх: выключить полный экран
+    state.full = false; save(); render({ pop: false });
+    return;
+  }
+  if (s.start && dy > 70 && Math.abs(dy) > Math.abs(dx) * 1.4) { toggleRun(); return; }
+  if (!s.nav) return;
   if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.4) return;
   if (dx > 0) onSkip(); else onBack();      // вправо: вперёд, влево: назад
 }, false);
@@ -1057,6 +1197,15 @@ function syncSettings() {
   setSegSel("#segOrder", function (v) { return (v === "1") === state.randLayout; });
   setSegSel("#segPair", function (v) { return v === state.newPair; });
   setSegSel("#segCtrl", function (v) { return v === state.ctrl; });
+  setSegSel("#segFull", function (v) { return (v === "1") === state.full; });
+  el("fullBox").style.display = state.ctrl === "swipe" ? "" : "none";
+  setSegSel("#segSame", function (v) { return (v === "1") === state.sameSize; });
+  el("sizeNote").textContent = "«Авто»: самый крупный размер, который помещается в зону, а длинное слово при необходимости делится на две строки. Своё значение (в пикселях) задаёт один размер для всех слов в таких зонах: слова переносятся на вторую строку, слишком длинное слово делится. Изменения видны после закрытия настроек. Выбор «Одинаковый» работает в режиме «Авто».";
+  ["h", "v", "d"].forEach(function (k) {
+    var v = state.fsz[k];
+    el("fszVal_" + k).textContent = v ? v + " px" : "Авто";
+    el("fszRange_" + k).value = v || curFont(k);
+  });
   el("ctrlNote").textContent = state.ctrl === "swipe"
     ? "Кнопки «Назад» и «Далее» скрыты. Свайп вправо: вперёд, свайп влево: назад. Свайпайте по центру экрана, не от самого края, чтобы не сработал системный жест «Назад». В режиме автоперемещения остаётся кнопка «Старт/Пауза»."
     : "Назад и вперёд кнопками внизу экрана.";
@@ -1071,8 +1220,8 @@ function syncSettings() {
     random: "Все " + (pol ? "полярности" : "эмоции") + " идут в случайном порядке."
   })[state.autoScope];
   document.querySelectorAll("#chipsPP button").forEach(function (b) { b.className = b.getAttribute("data-v") === state.ppAxis ? "sel" : ""; });
-  el("minVal").textContent = state.minS + " с";
-  el("maxVal").textContent = state.maxS + " с";
+  el("minVal").textContent = fmtS(state.minS);
+  el("maxVal").textContent = fmtS(state.maxS);
   el("info").textContent = pol ? "Пар в выбранной категории: " + polList().length + "." : "Эмоций в списке: " + state.items.length + ".";
   if (pol) {
     renderCatList(); renderPinInfo();
@@ -1454,9 +1603,40 @@ document.querySelectorAll("#segOrder button").forEach(function (b) {
 document.querySelectorAll("#segPair button").forEach(function (b) {
   b.addEventListener("click", function () { state.newPair = b.getAttribute("data-v"); syncSettings(); rebuildQueue(); });
 });
+function curFont(k) {
+  var cur = state.cur;
+  if (cur && famOf(LAYOUTS[cur.layout].A) === k) {
+    var l = el("lblA").style.display !== "none" ? el("lblA") : el("lblB");
+    var v = parseFloat(l.style.fontSize);
+    if (v > 0) return Math.max(10, Math.min(160, Math.round(v)));
+  }
+  return 40;
+}
+["h", "v", "d"].forEach(function (k) {
+  function setF(v, full) {
+    v = Math.max(0, Math.min(160, v));
+    if (v > 0 && v < 10) v = 10;
+    state.fsz[k] = v; save();
+    if (full) syncSettings(); else el("fszVal_" + k).textContent = v ? v + " px" : "Авто";
+    render({ pop: false });
+  }
+  el("fszMinus_" + k).addEventListener("click", function () { setF((state.fsz[k] || curFont(k)) - 2, true); });
+  el("fszPlus_" + k).addEventListener("click", function () { setF((state.fsz[k] || curFont(k)) + 2, true); });
+  el("fszRange_" + k).addEventListener("input", function () { setF(parseInt(this.value, 10), false); });
+  el("fszAuto_" + k).addEventListener("click", function () { setF(0, true); });
+});
+document.querySelectorAll("#segSame button").forEach(function (b) {
+  b.addEventListener("click", function () { state.sameSize = b.getAttribute("data-v") === "1"; save(); syncSettings(); render({ pop: false }); });
+});
 document.querySelectorAll("#segCtrl button").forEach(function (b) {
   b.addEventListener("click", function () {
     state.ctrl = b.getAttribute("data-v");
+    save(); syncSettings(); applyBody();
+  });
+});
+document.querySelectorAll("#segFull button").forEach(function (b) {
+  b.addEventListener("click", function () {
+    state.full = b.getAttribute("data-v") === "1";
     save(); syncSettings(); applyBody();
   });
 });
@@ -1475,12 +1655,12 @@ document.querySelectorAll("#segScope button").forEach(function (b) {
 document.querySelectorAll("#chipsPP button").forEach(function (b) {
   b.addEventListener("click", function () { state.ppAxis = b.getAttribute("data-v"); pp.i = 0; pp.dir = 1; remaining = 0; save(); syncSettings(); });
 });
-function setMin(v) { v = Math.max(2, Math.min(30, v)); state.minS = v; if (state.maxS < v) state.maxS = v; remaining = 0; save(); syncSettings(); }
-function setMax(v) { v = Math.max(2, Math.min(30, v)); state.maxS = v; if (state.minS > v) state.minS = v; remaining = 0; save(); syncSettings(); }
-el("minMinus").addEventListener("click", function () { setMin(state.minS - 1); });
-el("minPlus").addEventListener("click", function () { setMin(state.minS + 1); });
-el("maxMinus").addEventListener("click", function () { setMax(state.maxS - 1); });
-el("maxPlus").addEventListener("click", function () { setMax(state.maxS + 1); });
+function setMin(v) { v = Math.max(S_MIN, Math.min(S_MAX, v)); state.minS = v; if (state.maxS < v) state.maxS = v; remaining = 0; save(); syncSettings(); }
+function setMax(v) { v = Math.max(S_MIN, Math.min(S_MAX, v)); state.maxS = v; if (state.minS > v) state.minS = v; remaining = 0; save(); syncSettings(); }
+el("minMinus").addEventListener("click", function () { setMin(stepS(state.minS, -1)); });
+el("minPlus").addEventListener("click", function () { setMin(stepS(state.minS, 1)); });
+el("maxMinus").addEventListener("click", function () { setMax(stepS(state.maxS, -1)); });
+el("maxPlus").addEventListener("click", function () { setMax(stepS(state.maxS, 1)); });
 
 /* ---------- файл со списком эмоций ---------- */
 function decode(buf) {
