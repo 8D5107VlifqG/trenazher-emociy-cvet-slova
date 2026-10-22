@@ -77,6 +77,21 @@ main { flex: 1; min-height: 0; position: relative; }
 .main { border: 1px solid var(--line); background: var(--btn); color: var(--btn-ink); font-weight: 600; }
 .main:active, .btn2:active { -webkit-transform: scale(.97); transform: scale(.97); }
 .swipe .actions { display: none; }
+#btnSettings2 { display: none; }
+/* верхняя панель скрыта: «Настройки» внизу между «Назад» и «Далее» */
+.notop .top, .notop .progress { display: none; }
+.notop main { margin-top: 12px; }
+.notop #btnSettings2 { display: block; }
+.swipe.notop .actions { display: flex; }
+.swipe.notop .stage { bottom: 100px; }
+.swipe.notop #btnBack, .swipe.notop #btnSkip { display: none !important; }
+.swipe.notop:not(.autoon) #btnMain { display: none; }
+.swipe.notop #btnSettings2 { margin-left: 0; }
+.swipe.notop.autoon #btnMain { margin-left: 8px; }
+.notop.autoon:not(.swipe) .actions button { font-size: 12px; font-size: clamp(11px, 3.3vw, 17px); }
+/* боковые поля в горизонтальном положении убраны */
+body.nosides .app { max-width: none; padding-left: 0; padding-right: 0; padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+body.nosides .actions { max-width: none; left: 0; right: 0; padding: 0 8px; padding-left: 8px; }
 .swipe.autoon .actions { display: flex; }
 .swipe.autoon #btnBack, .swipe.autoon #btnSkip { display: none; }
 .swipe.autoon #btnMain { margin-left: 0; }
@@ -185,6 +200,7 @@ main { flex: 1; min-height: 0; position: relative; }
 
 <div class="actions">
   <button class="btn2" id="btnBack" type="button">Назад</button>
+  <button class="btn2" id="btnSettings2" type="button">Настройки</button>
   <button class="btn2" id="btnSkip" type="button" style="display:none">Далее</button>
   <button class="main" id="btnMain" type="button">Далее</button>
 </div>
@@ -326,6 +342,24 @@ main { flex: 1; min-height: 0; position: relative; }
       <p class="note">Счётчик, полоска и кнопка «Настройки» скрыты, зоны занимают весь экран. Чтобы выключить полный экран, проведите пальцем снизу вверх по центру экрана: вернутся кнопка «Настройки» и кнопки «Старт/Пауза». Включить снова можно здесь. При автоперемещении в полном экране кнопок нет: «Старт/Пауза» переключается свайпом сверху вниз по центру экрана.</p>
     </div>
 
+    <h2>Экран</h2>
+    <h3>Верхняя панель</h3>
+    <div class="seg" id="segTop">
+      <button type="button" data-v="0">Показывать</button>
+      <button type="button" data-v="1">Скрыть</button>
+    </div>
+    <p class="note" id="topNote"></p>
+    <h3>Боковые поля в горизонтальном положении</h3>
+    <div class="seg" id="segSides">
+      <button type="button" data-v="0">Оставить</button>
+      <button type="button" data-v="1">Убрать</button>
+    </div>
+    <p class="note" id="sidesNote"></p>
+    <div id="gapBox">
+      <div class="stepper"><button type="button" id="gapMinus" aria-label="Меньше">−</button><div class="val" id="gapVal">Авто</div><button type="button" id="gapPlus" aria-label="Больше">+</button></div>
+      <div class="slrow"><input type="range" id="gapRange" min="1" max="40" step="1" aria-label="Ширина боковых полей"><button class="btn" type="button" id="gapAuto" style="margin-left:10px;padding:10px 14px">Авто</button></div>
+    </div>
+
     <h2>Автоперемещение</h2>
     <div class="seg" id="segAuto">
       <button type="button" data-v="off">Выкл</button>
@@ -410,7 +444,7 @@ var state = {
   pol: { cat: "all", order: "list", pinned: null, custom: [], removed: [], edits: {}, ptr: 0 },
   c1: "#35629e", c2: "#2e8a86", hor: true, ver: true, diag: true,
   words: 2, side: "first", sameSize: true, fsz: { h: 0, v: 0, d: 0 }, randLayout: false, randColors: false, newPair: "after",
-  ctrl: "buttons", full: false, autoMode: "off", autoScope: "random", ppAxis: "h", minS: 3, maxS: 8,
+  ctrl: "buttons", full: false, hideTop: false, sideOff: false, sideGap: 0, autoMode: "off", autoScope: "random", ppAxis: "h", minS: 3, maxS: 8,
   undo: null, cur: null, ptr: 0, pairNo: 0
 };
 var emoMeta = {};
@@ -579,7 +613,7 @@ function save() {
       src: state.src, theme: state.theme, source: state.source, c1: state.c1, c2: state.c2,
       hor: state.hor, ver: state.ver, diag: state.diag,
       words: state.words, side: state.side, randLayout: state.randLayout, randColors: state.randColors, newPair: state.newPair,
-      ctrl: state.ctrl, full: state.full, sameSize: state.sameSize, fsz: state.fsz, autoMode: state.autoMode, autoScope: state.autoScope, ppAxis: state.ppAxis, minS: state.minS, maxS: state.maxS,
+      ctrl: state.ctrl, full: state.full, hideTop: state.hideTop, sideOff: state.sideOff, sideGap: state.sideGap, sameSize: state.sameSize, fsz: state.fsz, autoMode: state.autoMode, autoScope: state.autoScope, ppAxis: state.ppAxis, minS: state.minS, maxS: state.maxS,
       pol: state.pol, emo: state.emo, undo: state.undo,
       cur: state.cur, ptr: state.ptr, pairNo: state.pairNo
     };
@@ -613,6 +647,9 @@ function load() {
     state.side = (s.side === "second" || s.side === "random") ? s.side : "first";
     state.ctrl = s.ctrl === "swipe" ? "swipe" : "buttons";
     state.full = s.full === true;
+    state.hideTop = s.hideTop === true;
+    state.sideOff = s.sideOff === true;
+    var sg = parseInt(s.sideGap, 10); state.sideGap = (sg >= 1 && sg <= 40) ? sg : 0;
     state.sameSize = s.sameSize !== false;
     if (s.fsz && typeof s.fsz === "object") ["h", "v", "d"].forEach(function (k) { var v = parseInt(s.fsz[k], 10); state.fsz[k] = (v >= 10 && v <= 160) ? v : 0; });
     if (s.autoMode === "fwd" || s.autoMode === "pp") state.autoMode = s.autoMode;
@@ -899,7 +936,26 @@ function barFraction(cur) {
   return n ? (n - deck.length) / n : 0;
 }
 function applyBody() {
-  document.body.className = (state.ctrl === "swipe" ? "swipe" : "") + (state.ctrl === "swipe" && state.full ? " full" : "") + (autoOn() ? " autoon" : "");
+  var W = window.innerWidth || document.documentElement.clientWidth, H = window.innerHeight || document.documentElement.clientHeight;
+  var fullOn = state.ctrl === "swipe" && state.full;
+  var land = W > H && !fullOn;
+  var off = land && state.sideOff, gap = (land && !state.sideOff && state.sideGap > 0) ? state.sideGap : 0;
+  document.body.className = (state.ctrl === "swipe" ? "swipe" : "") + (fullOn ? " full" : "") + (autoOn() ? " autoon" : "") +
+    (state.hideTop && !fullOn ? " notop" : "") + (off ? " nosides" : "");
+  var app = document.querySelector(".app"), act = document.querySelector(".actions");
+  if (gap) {
+    var pad = Math.round(W * gap / 100) + "px";
+    app.style.maxWidth = "none"; app.style.paddingLeft = pad; app.style.paddingRight = pad;
+    act.style.maxWidth = "none"; act.style.left = pad; act.style.right = pad; act.style.paddingLeft = "0"; act.style.paddingRight = "0";
+  } else {
+    app.style.maxWidth = ""; app.style.paddingLeft = ""; app.style.paddingRight = "";
+    act.style.maxWidth = ""; act.style.left = ""; act.style.right = ""; act.style.paddingLeft = ""; act.style.paddingRight = "";
+  }
+}
+function autoGapPct() {
+  var W = window.innerWidth || document.documentElement.clientWidth, H = window.innerHeight || document.documentElement.clientHeight;
+  var L = Math.max(W, H), v = Math.round(Math.max(0, (L - 760) / 2) / L * 100);
+  return Math.max(1, Math.min(40, v || 10));
 }
 function render(opts) {
   applyBody();
@@ -974,8 +1030,21 @@ el("btnMain").addEventListener("click", onMain);
 el("btnSkip").addEventListener("click", onSkip);
 el("btnBack").addEventListener("click", onBack);
 function sheetOpen() { return !!document.querySelector(".sheet.open"); }
+function isS(e) { return e.code === "KeyS" || e.key === "s" || e.key === "S" || e.key === "ы" || e.key === "Ы"; }
 document.addEventListener("keydown", function (e) {
-  if (sheetOpen()) return;
+  if (sheetOpen()) {
+    if (e.key === "Escape") {      // Esc закрывает верхнее открытое окно
+      e.preventDefault();
+      if (el("editSheet").classList.contains("open")) el("btnEditClose").click();
+      else if (el("pickSheet").classList.contains("open")) el("btnPickClose").click();
+      else closeSettings();
+      return;
+    }
+    var tg = e.target && e.target.tagName;
+    if (isS(e) && tg !== "INPUT" && tg !== "TEXTAREA" && el("setSheet").classList.contains("open") && !el("pickSheet").classList.contains("open") && !el("editSheet").classList.contains("open")) { e.preventDefault(); closeSettings(); }
+    return;
+  }
+  if (e.key === "Escape" && state.ctrl === "swipe" && state.full) { e.preventDefault(); state.full = false; save(); render({ pop: false }); openSettings(); return; }
   if (e.key === "ArrowRight") { e.preventDefault(); onSkip(); }
   else if (e.key === " " || e.key === "Enter") { e.preventDefault(); onMain(); }
   else if (e.key === "ArrowLeft") { e.preventDefault(); onBack(); }
@@ -1199,6 +1268,15 @@ function syncSettings() {
   setSegSel("#segCtrl", function (v) { return v === state.ctrl; });
   setSegSel("#segFull", function (v) { return (v === "1") === state.full; });
   el("fullBox").style.display = state.ctrl === "swipe" ? "" : "none";
+  setSegSel("#segTop", function (v) { return (v === "1") === state.hideTop; });
+  el("topNote").textContent = "Скрыть: счётчик, полоска и кнопка «Настройки» вверху убираются, зоны занимают их место. Кнопка «Настройки» появляется внизу между «Назад» и «Далее». В режиме свайпов внизу остаётся только «Настройки» (и «Старт/Пауза» при автоперемещении). Если включён «Полный экран», эта настройка не действует.";
+  setSegSel("#segSides", function (v) { return (v === "1") === state.sideOff; });
+  el("sidesNote").textContent = state.sideOff
+    ? "Только в горизонтальном положении: зоны и кнопки занимают всю ширину экрана."
+    : "Только в горизонтальном положении. Ширина пустого места с каждой стороны, в процентах от ширины экрана. «Авто»: как раньше, зоны не шире 760 px.";
+  el("gapBox").className = state.sideOff ? "dim" : "";
+  el("gapVal").textContent = state.sideGap ? state.sideGap + " %" : "Авто";
+  el("gapRange").value = state.sideGap || autoGapPct();
   setSegSel("#segSame", function (v) { return (v === "1") === state.sameSize; });
   el("sizeNote").textContent = "«Авто»: самый крупный размер, который помещается в зону, а длинное слово при необходимости делится на две строки. Своё значение (в пикселях) задаёт один размер для всех слов в таких зонах: слова переносятся на вторую строку, слишком длинное слово делится. Изменения видны после закрытия настроек. Выбор «Одинаковый» работает в режиме «Авто».";
   ["h", "v", "d"].forEach(function (k) {
@@ -1250,6 +1328,7 @@ function closeSettings() {
   resumeAfter = false;
 }
 el("btnSettings").addEventListener("click", openSettings);
+el("btnSettings2").addEventListener("click", openSettings);
 el("btnClose").addEventListener("click", closeSettings);
 
 /* ---------- настройки: что показывать ---------- */
@@ -1640,6 +1719,22 @@ document.querySelectorAll("#segFull button").forEach(function (b) {
     save(); syncSettings(); applyBody();
   });
 });
+document.querySelectorAll("#segTop button").forEach(function (b) {
+  b.addEventListener("click", function () { state.hideTop = b.getAttribute("data-v") === "1"; save(); syncSettings(); applyBody(); });
+});
+document.querySelectorAll("#segSides button").forEach(function (b) {
+  b.addEventListener("click", function () { state.sideOff = b.getAttribute("data-v") === "1"; save(); syncSettings(); applyBody(); });
+});
+function setGap(v, full) {
+  v = Math.max(0, Math.min(40, v));
+  state.sideGap = v; save();
+  if (full) syncSettings(); else el("gapVal").textContent = v ? v + " %" : "Авто";
+  applyBody();
+}
+el("gapMinus").addEventListener("click", function () { setGap((state.sideGap || autoGapPct()) - 1, true); });
+el("gapPlus").addEventListener("click", function () { setGap((state.sideGap || autoGapPct()) + 1, true); });
+el("gapRange").addEventListener("input", function () { setGap(parseInt(this.value, 10), false); });
+el("gapAuto").addEventListener("click", function () { setGap(0, true); });
 document.querySelectorAll("#segAuto button").forEach(function (b) {
   b.addEventListener("click", function () {
     var v = b.getAttribute("data-v");
