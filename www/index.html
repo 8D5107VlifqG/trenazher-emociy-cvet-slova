@@ -242,6 +242,14 @@ body.nosides .actions { max-width: none; left: 0; right: 0; padding: 0 8px; padd
       <input class="inp" id="inB" type="text" maxlength="80" placeholder="Второй полюс, например: Страх" autocomplete="off">
       <div class="row"><button class="btn primary" id="btnAddPair" type="button">Добавить и показать</button></div>
       <div class="status" id="pairStatus"></div>
+      <h3>Экспорт и импорт</h3>
+      <p class="note">Выгружает все полярности целиком: полный список пар по категориям, свои пары, правки, удалённые пары, категорию, порядок, закрепление и сохранённые цвета пар. Импорт заменяет ваши текущие правки полярностей (его можно отменить).</p>
+      <div class="row"><button class="btn" id="btnExpCopyPol" type="button">Скопировать</button><button class="btn" id="btnExpFilePol" type="button">Сохранить в файл</button></div>
+      <div class="row"><button class="btn" id="btnImpFilePol" type="button">Импорт из файла</button><button class="btn" id="btnImpTextPol" type="button">Импорт из текста ниже</button></div>
+      <textarea class="inp" id="taPol" rows="4" spellcheck="false" autocomplete="off" placeholder="Сюда попадает текст экспорта. Для импорта вставьте сюда текст и нажмите «Импорт из текста»."></textarea>
+      <input type="file" id="impFilePol" accept=".json,.txt,application/json,text/plain" hidden>
+      <div class="row" id="rowUndoImpPol"><button class="btn primary" id="btnUndoImpPol" type="button">Отменить импорт</button></div>
+      <div class="status" id="ioStatusPol"></div>
     </div>
 
     <div id="emoBox">
@@ -266,6 +274,13 @@ body.nosides .actions { max-width: none; left: 0; right: 0; padding: 0 8px; padd
       <div class="row"><button class="btn primary" id="btnPick" type="button">Добавить эмоции из файла</button><button class="btn" id="btnPickReplace" type="button">Заменить список файлом</button></div>
       <input type="file" id="filePick" accept=".txt,text/plain" hidden>
       <div class="status" id="loadStatus"></div>
+      <h3>Экспорт и импорт</h3>
+      <p class="note">Выгружает все эмоции целиком: полный список, правки, свои и удалённые эмоции, закрепление, порядок и сохранённые цвета эмоций. Импорт заменяет текущие эмоции (его можно отменить).</p>
+      <div class="row"><button class="btn" id="btnExpCopyEmo" type="button">Скопировать</button><button class="btn" id="btnExpFileEmo" type="button">Сохранить в файл</button></div>
+      <div class="row"><button class="btn" id="btnImpFileEmo" type="button">Импорт из файла</button><button class="btn" id="btnImpTextEmo" type="button">Импорт из текста ниже</button></div>
+      <textarea class="inp" id="taEmo" rows="4" spellcheck="false" autocomplete="off" placeholder="Сюда попадает текст экспорта. Для импорта вставьте сюда текст и нажмите «Импорт из текста»."></textarea>
+      <input type="file" id="impFileEmo" accept=".json,.txt,application/json,text/plain" hidden>
+      <div class="status" id="ioStatusEmo"></div>
     </div>
 
     <h2>Цвета зон</h2>
@@ -1425,6 +1440,7 @@ function syncSettings() {
     el("btnRestoreEmo").textContent = "Вернуть удалённые эмоции (" + ne + ")";
     el("rowUndoEmo").style.display = state.undo ? "" : "none";
   }
+  el("rowUndoImpPol").style.display = polImpUndo ? "" : "none";
   updateColorUI(false);
 }
 function openSettings() {
@@ -1924,6 +1940,116 @@ filePick.addEventListener("change", function () {
   r.readAsArrayBuffer(f);
   filePick.value = "";
 });
+
+/* ---------- экспорт и импорт эмоций и полярностей ---------- */
+var IO_APP = "emotionpairs", polImpUndo = null;
+function colorsOf(prefix) {
+  var o = {}, k;
+  for (k in state.cmap) if (state.cmap.hasOwnProperty(k) && k.indexOf(prefix) === 0) o[k] = state.cmap[k];
+  return o;
+}
+function mergeColors(obj, prefix) {
+  var n = 0, k;
+  if (obj && typeof obj === "object") for (k in obj) if (obj.hasOwnProperty(k) && isStr(k) && k.indexOf(prefix) === 0 && isHex(obj[k])) { state.cmap[k] = obj[k]; n++; }
+  return n;
+}
+function exportData(kind) {
+  var d = { app: IO_APP, kind: kind, v: 1 };
+  if (kind === "emotions") {
+    d.src = state.src;
+    if (state.src === "custom") d.base = state.base;
+    d.emo = { removed: state.emo.removed, added: state.emo.added, edits: state.emo.edits, pinned: state.emo.pinned, pinned2: state.emo.pinned2, order: state.emo.order };
+    d.colors = colorsOf("e:");
+    d.items = state.items.slice();
+  } else {
+    d.pol = { cat: state.pol.cat, order: state.pol.order, pinned: state.pol.pinned, removed: state.pol.removed, edits: state.pol.edits,
+      custom: state.pol.custom.map(function (x) { return { a: x.a, b: x.b }; }) };
+    d.colors = colorsOf("p:");
+    d.pairs = [];
+    state.pol.custom.forEach(function (x) { d.pairs.push({ cat: "Мои пары", a: x.a, b: x.b }); });
+    POL.forEach(function (c) { polPairsOf(c).forEach(function (x) { d.pairs.push({ cat: c.name, a: x.a, b: x.b }); }); });
+  }
+  return JSON.stringify(d, null, 1);
+}
+function importData(kind, text) {
+  var d, n;
+  try { d = JSON.parse(String(text).replace(/^\uFEFF/, "")); } catch (e) { return "Это не файл экспорта: текст не удалось разобрать."; }
+  if (!d || d.app !== IO_APP || (d.kind !== "emotions" && d.kind !== "polarities")) return "Это не файл экспорта этого приложения.";
+  if (d.kind !== kind) return d.kind === "emotions" ? "Это экспорт эмоций. Импортируйте его в режиме «Эмоции»." : "Это экспорт полярностей. Импортируйте его в режиме «Полярности».";
+  if (kind === "emotions") {
+    var e = d.emo || {}, base = (d.src === "custom" && Array.isArray(d.base)) ? strArr(d.base) : null;
+    if (d.src === "custom" && (!base || base.length < 2)) return "В файле слишком мало эмоций.";
+    snapEmo(); freshStart();
+    state.src = base ? "custom" : "builtin"; state.base = base || DEFAULT_ITEMS;
+    state.emo = { removed: strArr(e.removed), added: strArr(e.added), edits: editMap(e.edits), pinned: isStr(e.pinned) ? e.pinned : null,
+      pinned2: (isStr(e.pinned2) && isStr(e.pinned)) ? e.pinned2 : null, order: e.order === "list" ? "list" : "random", ptr: 0 };
+    rebuildItems();
+    if (state.items.length < 2) { undoEmo(); return "В файле слишком мало эмоций, список не изменён."; }
+    n = mergeColors(d.colors, "e:");
+    save(); syncSettings(); render({ pop: true });
+    return "Импорт готов: эмоций в списке — " + state.items.length + ", сохранённых цветов в файле — " + n + ". Если это случайно, нажмите «Отменить сброс списка».";
+  }
+  var p = d.pol || {}, names = POL.map(function (c) { return c.name; });
+  polImpUndo = { pol: clone(state.pol), cmap: clone(state.cmap) };
+  freshStart();
+  var custom = (Array.isArray(p.custom) ? p.custom : []).filter(function (x) { return x && isStr(x.a) && isStr(x.b); })
+    .map(function (x) { return { a: x.a, b: x.b, cat: "Мои пары", custom: true }; });
+  state.pol = { cat: "all", order: p.order === "random" ? "random" : "list", pinned: null, custom: custom, removed: strArr(p.removed), edits: editMap(p.edits), ptr: 0 };
+  if (p.cat === "all" || names.indexOf(p.cat) >= 0 || (p.cat === "custom" && custom.length)) state.pol.cat = p.cat;
+  if (p.pinned && isStr(p.pinned.a) && isStr(p.pinned.b)) state.pol.pinned = { a: p.pinned.a, b: p.pinned.b };
+  n = mergeColors(d.colors, "p:");
+  save(); syncSettings(); render({ pop: true });
+  return "Импорт готов: своих пар — " + custom.length + ", удалённых — " + state.pol.removed.length + ", сохранённых цветов в файле — " + n + ". Если это случайно, нажмите «Отменить импорт».";
+}
+function undoPolImport() {
+  if (!polImpUndo) return;
+  state.pol = polImpUndo.pol; state.cmap = polImpUndo.cmap; polImpUndo = null;
+  resetPairs(); save(); syncSettings(); render({ pop: true });
+}
+function fallbackCopy(ta) {
+  try { ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length); return document.execCommand("copy"); } catch (e) { return false; }
+}
+function setupIO(kind, suf) {
+  var ta = el("ta" + suf), msg = el("ioStatus" + suf), inp = el("impFile" + suf);
+  el("btnExpCopy" + suf).addEventListener("click", function () {
+    var text = exportData(kind);
+    ta.value = text;
+    function done(ok) {
+      msg.textContent = ok ? "Скопировано в буфер обмена. Вставьте в заметки или отправьте себе, а на другом устройстве вставьте сюда и нажмите «Импорт из текста»."
+        : "Автоматически скопировать не удалось. Текст в поле ниже: выделите его и скопируйте вручную.";
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(fallbackCopy(ta)); });
+    else done(fallbackCopy(ta));
+  });
+  el("btnExpFile" + suf).addEventListener("click", function () {
+    var text = exportData(kind);
+    ta.value = text;
+    try {
+      var blob = new Blob([text], { type: "application/json" }), url = URL.createObjectURL(blob), a = document.createElement("a");
+      a.href = url; a.download = (kind === "emotions" ? "emotions" : "polarities") + "-export.json";
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      msg.textContent = "Файл отправлен на скачивание. Если в приложении ничего не скачалось, нажмите «Скопировать»: текст появится и в поле ниже.";
+    } catch (err) { msg.textContent = "Сохранить файл не получилось. Нажмите «Скопировать»."; }
+  });
+  el("btnImpFile" + suf).addEventListener("click", function () { inp.click(); });
+  inp.addEventListener("change", function () {
+    var f = inp.files[0];
+    if (!f) return;
+    var r = new FileReader();
+    r.onload = function () { msg.textContent = importData(kind, decode(r.result)); };
+    r.onerror = function () { msg.textContent = "Не удалось прочитать файл."; };
+    r.readAsArrayBuffer(f);
+    inp.value = "";
+  });
+  el("btnImpText" + suf).addEventListener("click", function () {
+    if (!ta.value.replace(/\s+/g, "")) { msg.textContent = "Поле пустое: вставьте сюда текст экспорта."; return; }
+    msg.textContent = importData(kind, ta.value);
+  });
+}
+setupIO("emotions", "Emo");
+setupIO("polarities", "Pol");
+el("btnUndoImpPol").addEventListener("click", function () { undoPolImport(); el("ioStatusPol").textContent = "Импорт отменён."; });
 
 /* ---------- запуск ---------- */
 var rzTimer = null;
