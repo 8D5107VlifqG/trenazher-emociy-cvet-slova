@@ -40,7 +40,7 @@ body {
 button { touch-action: manipulation; -webkit-user-select: none; user-select: none; font-family: inherit; }
 .app { height: 100%; display: flex; flex-direction: column; max-width: 760px; margin: 0 auto; padding: 0 20px; padding-top: 0; }
 .top { display: flex; align-items: center; justify-content: space-between; padding: 14px 0 8px; color: var(--muted); font-size: 14px; }
-#counterTop { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 10px; }
+#counterTop { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 6px; }
 .top button { background: none; border: 1px solid var(--line); color: var(--muted); font: inherit; padding: 8px 14px; border-radius: 10px; cursor: pointer; }
 .progress { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; margin-bottom: 8px; }
 .progress > i { display: block; height: 100%; width: 0; background: var(--bar); -webkit-transition: width .25s ease; transition: width .25s ease; }
@@ -73,20 +73,27 @@ main { flex: 1; min-height: 0; position: relative; }
 .actions { position: fixed; left: 0; right: 0; margin: 0 auto; max-width: 760px; bottom: 20px; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); padding: 0 16px; display: flex; z-index: 3; }
 .actions button { -webkit-box-flex: 1; flex: 1 1 0; min-width: 0; height: 64px; padding: 0 4px; border-radius: 20px; font: inherit; font-size: 17px; font-size: clamp(15px, 4.6vw, 19px); white-space: nowrap; cursor: pointer; }
 .actions button + button { margin-left: 8px; }
+.actions #btnSwap2, .actions #btnSettings2 { -webkit-box-flex: .6; flex: .6 1 0; font-size: 12px; font-size: clamp(11px, 2.6vw, 15px); padding: 0 2px; }
+@media (max-width: 480px) { .actions #btnSwap2, .actions #btnSettings2 { -webkit-box-flex: .85; flex: .85 1 0; font-size: 10px; font-size: clamp(10px, 2.9vw, 12px); } }
+@media (max-width: 480px) { .notop.autoon:not(.swipe) .actions #btnSwap2, .notop.autoon:not(.swipe) .actions #btnSettings2 { -webkit-box-flex: 1; flex: 1 1 0; font-size: 9px; padding: 0; } }
+.swipe.notop:not(.autoon) .actions { justify-content: center; }
+.swipe.notop:not(.autoon) .actions #btnSwap2, .swipe.notop:not(.autoon) .actions #btnSettings2 { -webkit-box-flex: 0; flex: 0 0 120px; }
 .btn2 { border: 1px solid var(--line); background: var(--surface); color: var(--muted); font-weight: 500; }
 .main { border: 1px solid var(--line); background: var(--btn); color: var(--btn-ink); font-weight: 600; }
 .main:active, .btn2:active { -webkit-transform: scale(.97); transform: scale(.97); }
 .swipe .actions { display: none; }
-#btnSettings2 { display: none; }
+#btnSettings2, #btnSwap2 { display: none; }
+.top #btnSwapTop { margin-right: 4px; padding: 8px 8px; font-size: 13px; }
 /* верхняя панель скрыта: «Настройки» внизу между «Назад» и «Далее» */
 .notop .top, .notop .progress { display: none; }
 .notop main { margin-top: 12px; }
-.notop #btnSettings2 { display: block; }
+.notop #btnSettings2, .notop #btnSwap2 { display: block; }
 .swipe.notop .actions { display: flex; }
 .swipe.notop .stage { bottom: 100px; }
 .swipe.notop #btnBack, .swipe.notop #btnSkip { display: none !important; }
 .swipe.notop:not(.autoon) #btnMain { display: none; }
-.swipe.notop #btnSettings2 { margin-left: 0; }
+.swipe.notop #btnSwap2 { margin-left: 0; }
+.swipe.notop #btnSettings2 { margin-left: 8px; }
 .swipe.notop.autoon #btnMain { margin-left: 8px; }
 .notop.autoon:not(.swipe) .actions button { font-size: 12px; font-size: clamp(11px, 3.3vw, 17px); }
 /* боковые поля в горизонтальном положении убраны */
@@ -184,6 +191,7 @@ body.nosides .actions { max-width: none; left: 0; right: 0; padding: 0 8px; padd
 <div class="app">
   <div class="top">
     <span id="counterTop"></span>
+    <button id="btnSwapTop" type="button" aria-label="Поменять цвета местами">&#8644; Цвета</button>
     <button id="btnSettings" type="button">Настройки</button>
   </div>
   <div class="progress" id="barWrap"><i id="bar"></i></div>
@@ -200,6 +208,7 @@ body.nosides .actions { max-width: none; left: 0; right: 0; padding: 0 8px; padd
 
 <div class="actions">
   <button class="btn2" id="btnBack" type="button">Назад</button>
+  <button class="btn2" id="btnSwap2" type="button" aria-label="Поменять цвета местами">&#8644; Цвета</button>
   <button class="btn2" id="btnSettings2" type="button">Настройки</button>
   <button class="btn2" id="btnSkip" type="button" style="display:none">Далее</button>
   <button class="main" id="btnMain" type="button">Далее</button>
@@ -270,11 +279,17 @@ body.nosides .actions { max-width: none; left: 0; right: 0; padding: 0 8px; padd
         <button class="ctab" id="tab1" type="button"></button>
         <button class="ctab" id="tab2" type="button"></button>
       </div>
+      <p class="note" id="zoneNote"></p>
       <div class="palette" id="palette"></div>
       <div class="slrow"><span>Оттенок</span><input type="range" id="sH" min="0" max="360" step="1" aria-label="Оттенок"></div>
       <div class="slrow"><span>Насыщенность</span><input type="range" id="sS" min="0" max="100" step="1" aria-label="Насыщенность"></div>
       <div class="slrow"><span>Яркость</span><input type="range" id="sL" min="8" max="94" step="1" aria-label="Яркость"></div>
       <div class="preview"><div id="pv1"></div><div id="pv2"></div></div>
+      <h3>Сохранённые цвета</h3>
+      <p class="note" id="savedNote"></p>
+      <div class="row"><button class="btn primary" id="btnSaveColors" type="button">Сохранить цвета</button><button class="btn" id="btnForgetColors" type="button">Убрать сохранённые</button></div>
+      <div class="row" id="rowForgetAll"><button class="btn" id="btnForgetAll" type="button">Убрать все сохранённые цвета</button></div>
+      <div class="status" id="colorStatus"></div>
     </div>
 
     <h2>Слова на экране</h2>
@@ -442,7 +457,7 @@ var state = {
   items: DEFAULT_ITEMS, base: DEFAULT_ITEMS, src: "builtin", theme: "dark", source: "emotions",
   emo: { removed: [], added: [], edits: {}, pinned: null, pinned2: null, order: "random", ptr: 0 },
   pol: { cat: "all", order: "list", pinned: null, custom: [], removed: [], edits: {}, ptr: 0 },
-  c1: "#35629e", c2: "#2e8a86", hor: true, ver: true, diag: true,
+  c1: "#35629e", c2: "#2e8a86", cmap: {}, hor: true, ver: true, diag: true,
   words: 2, side: "first", sameSize: true, fsz: { h: 0, v: 0, d: 0 }, randLayout: false, randColors: false, newPair: "after",
   ctrl: "buttons", full: false, hideTop: false, sideOff: false, sideGap: 0, autoMode: "off", autoScope: "random", ppAxis: "h", minS: 3, maxS: 8,
   undo: null, cur: null, ptr: 0, pairNo: 0
@@ -548,6 +563,43 @@ function randomColors() {
   return [pick(h1), pick(h2)];
 }
 
+/* цвета зон: сохранённые за парой (полярности) или за эмоцией, временные (после «Поменять местами») и общие */
+function colorKey(i) {
+  var cur = state.cur;
+  if (!cur) return null;
+  if (cur.src === "pol") return "p:" + normS(cur.ta) + "|" + normS(cur.tb) + ":" + i;
+  if (state.words === 1 && (cur.side === "B" ? 2 : 1) !== i) return null;
+  return "e:" + normS(i === 1 ? cur.ta : cur.tb);
+}
+function isSaved(i) { var k = colorKey(i); return !!(k && isHex(state.cmap[k])); }
+function zoneColor(i) {
+  var cur = state.cur, k = colorKey(i);
+  if (cur && isHex(cur["s" + i])) return cur["s" + i];
+  if (k && isHex(state.cmap[k])) return state.cmap[k];
+  return i === 1 ? state.c1 : state.c2;
+}
+function writeZone(i, hex) {
+  var cur = state.cur, k = colorKey(i);
+  if (cur && isHex(cur["s" + i])) cur["s" + i] = hex;
+  else if (k && isHex(state.cmap[k])) state.cmap[k] = hex;
+  else if (i === 1) state.c1 = hex;
+  else state.c2 = hex;
+}
+function swapColors() {
+  var cur = state.cur;
+  if (!cur || !ready()) return;
+  if (state.randColors) {
+    var a = isHex(cur.c1) ? cur.c1 : state.c1, b = isHex(cur.c2) ? cur.c2 : state.c2;
+    cur.c1 = b; cur.c2 = a;
+  } else {
+    var d1 = zoneColor(1), d2 = zoneColor(2), k1 = colorKey(1), k2 = colorKey(2);
+    if (k1 && k2 && isSaved(1) && isSaved(2) && !isHex(cur.s1) && !isHex(cur.s2)) { state.cmap[k1] = d2; state.cmap[k2] = d1; }
+    else { cur.s1 = d2; cur.s2 = d1; }
+  }
+  save(); render({ pop: false });
+  if (el("setSheet").classList.contains("open")) updateColorUI(false);
+}
+
 /* ---------- полярности ---------- */
 function splitPol(s) {
   var i = s.indexOf(" — "), a, b;
@@ -610,7 +662,7 @@ function ready() {
 function save() {
   try {
     var s = {
-      src: state.src, theme: state.theme, source: state.source, c1: state.c1, c2: state.c2,
+      src: state.src, theme: state.theme, source: state.source, c1: state.c1, c2: state.c2, cmap: state.cmap,
       hor: state.hor, ver: state.ver, diag: state.diag,
       words: state.words, side: state.side, randLayout: state.randLayout, randColors: state.randColors, newPair: state.newPair,
       ctrl: state.ctrl, full: state.full, hideTop: state.hideTop, sideOff: state.sideOff, sideGap: state.sideGap, sameSize: state.sameSize, fsz: state.fsz, autoMode: state.autoMode, autoScope: state.autoScope, ppAxis: state.ppAxis, minS: state.minS, maxS: state.maxS,
@@ -641,6 +693,7 @@ function load() {
     state.theme = s.theme || "dark";
     if (isHex(s.c1)) state.c1 = s.c1;
     if (isHex(s.c2)) state.c2 = s.c2;
+    if (s.cmap && typeof s.cmap === "object") for (var ck in s.cmap) if (s.cmap.hasOwnProperty(ck) && isStr(ck) && isHex(s.cmap[ck])) state.cmap[ck] = s.cmap[ck];
     ["hor", "ver", "diag", "randLayout", "randColors"].forEach(function (k) { if (typeof s[k] === "boolean") state[k] = s[k]; });
     state.newPair = s.newPair === "each" ? "each" : "after";
     state.words = (s.words === 0 || s.words === 1) ? s.words : 2;
@@ -690,6 +743,7 @@ function load() {
     if (c && isStr(c.ta) && isStr(c.tb) && LAYOUTS[c.layout] && Array.isArray(c.queue) && (wantPol === (c.src === "pol"))) {
       c.queue = c.queue.filter(function (x) { return LAYOUTS[x]; });
       if (!isHex(c.c1) || !isHex(c.c2)) { delete c.c1; delete c.c2; }
+      if (!isHex(c.s1) || !isHex(c.s2)) { delete c.s1; delete c.s2; }
       if (c.side !== "B") c.side = "A";
       state.cur = c;
     }
@@ -966,8 +1020,8 @@ function render(opts) {
   }
   if (!cur) { nextStep(); return; }
   var L = LAYOUTS[cur.layout];
-  var k1 = (state.randColors && isHex(cur.c1)) ? cur.c1 : state.c1;
-  var k2 = (state.randColors && isHex(cur.c2)) ? cur.c2 : state.c2;
+  var k1 = state.randColors ? (isHex(cur.c1) ? cur.c1 : state.c1) : zoneColor(1);
+  var k2 = state.randColors ? (isHex(cur.c2) ? cur.c2 : state.c2) : zoneColor(2);
   var side = cur.side === "B" ? "B" : "A";
   var showA = state.words === 2 || (state.words === 1 && side === "A");
   var showB = state.words === 2 || (state.words === 1 && side === "B");
@@ -1048,6 +1102,7 @@ document.addEventListener("keydown", function (e) {
   if (e.key === "ArrowRight") { e.preventDefault(); onSkip(); }
   else if (e.key === " " || e.key === "Enter") { e.preventDefault(); onMain(); }
   else if (e.key === "ArrowLeft") { e.preventDefault(); onBack(); }
+  else if (e.code === "KeyC" && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); swapColors(); }
 });
 var sw = null;
 document.addEventListener("touchstart", function (e) {
@@ -1097,14 +1152,14 @@ function buildPalette() {
     box.appendChild(b);
   });
 }
-function curColor() { return tab === 1 ? state.c1 : state.c2; }
+function curColor() { return zoneColor(tab); }
 function setColor(hex, fromSlider) {
-  if (tab === 1) state.c1 = hex; else state.c2 = hex;
+  writeZone(tab, hex);
   save(); updateColorUI(fromSlider); render({ pop: false });
 }
 function updateColorUI(fromSlider) {
   [1, 2].forEach(function (i) {
-    var hex = i === 1 ? state.c1 : state.c2, t = el("tab" + i);
+    var hex = zoneColor(i), t = el("tab" + i);
     t.style.background = hex; t.style.color = inkFor(hex);
     t.innerHTML = "Цвет " + i + "<small>" + hex.toUpperCase() + "</small>";
     t.className = "ctab" + (tab === i ? " sel" : "");
@@ -1114,12 +1169,69 @@ function updateColorUI(fromSlider) {
   document.querySelectorAll("#palette button").forEach(function (b) {
     b.className = b.getAttribute("data-c").toLowerCase() === cur.toLowerCase() ? "sel" : "";
   });
+  updateSavedUI();
   if (!fromSlider) { el("sH").value = hsl[0]; el("sS").value = hsl[1]; el("sL").value = hsl[2]; }
   var h = +el("sH").value, s = +el("sS").value, l = +el("sL").value;
   el("sH").style.background = "linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)";
   el("sS").style.background = "linear-gradient(90deg," + hslToHex(h, 0, l) + "," + hslToHex(h, 100, l) + ")";
   el("sL").style.background = "linear-gradient(90deg,#000," + hslToHex(h, s, 50) + ",#fff)";
 }
+function pairTitle() {
+  var c = state.cur, pol = state.source === "polarities";
+  if (!c) return "";
+  if (pol) return "«" + c.ta + " — " + c.tb + "»";
+  if (state.words === 1) return "«" + (c.side === "B" ? c.tb : c.ta) + "»";
+  return "«" + c.ta + "» и «" + c.tb + "»";
+}
+function updateSavedUI() {
+  var cur = state.cur, pol = state.source === "polarities", n = 0, k;
+  for (k in state.cmap) if (state.cmap.hasOwnProperty(k)) n++;
+  var keys = (colorKey(1) ? 1 : 0) + (colorKey(2) ? 1 : 0), sv = (isSaved(1) ? 1 : 0) + (isSaved(2) ? 1 : 0);
+  var tmp = !!(cur && isHex(cur.s1));
+  var what = pol ? "этой пары" : (state.words === 1 ? "этой эмоции" : "этих эмоций");
+  el("btnSaveColors").textContent = pol ? "Сохранить цвета этой пары" : (state.words === 1 ? "Сохранить цвет этой эмоции" : "Сохранить цвета этих эмоций");
+  el("btnSaveColors").disabled = !cur;
+  el("btnForgetColors").style.display = (sv || tmp) ? "" : "none";
+  el("rowForgetAll").style.display = n ? "" : "none";
+  el("zoneNote").textContent = !cur ? "" : (pol || state.words !== 1)
+    ? "Цвет 1: " + (pol || state.words === 2 ? "«" + cur.ta + "»" : "первая зона") + ", цвет 2: " + (pol || state.words === 2 ? "«" + cur.tb + "»" : "вторая зона") + ". Выбор ниже меняет цвета " + what + (sv ? " (сохранённые)." : (tmp ? " на этот показ." : " и всех несохранённых.")) : "";
+  var t;
+  if (!cur) t = "Когда на экране появится пара, здесь можно сохранить её цвета.";
+  else if (!sv) t = "Сейчас у " + pairTitle() + " общие цвета, они одинаковы для всех несохранённых. Выберите цвета выше и нажмите «Сохранить»: они закрепятся за " + (pol ? "этой полярностью" : (state.words === 1 ? "этой эмоцией" : "этими эмоциями")) + ", у других останутся свои.";
+  else if (sv === keys) t = "Цвета " + what + " сохранены. Если менять их выше, изменения запоминаются сразу.";
+  else t = "Сохранён цвет только у одной из двух эмоций, у другой показывается общий. Нажмите «Сохранить», чтобы закрепить оба.";
+  if (tmp) t += " Цвета сейчас временно поменяны местами; «Сохранить» запомнит именно их.";
+  if (n) t += " Всего сохранено цветов: " + n + ".";
+  el("savedNote").textContent = t;
+}
+el("btnSaveColors").addEventListener("click", function () {
+  var cur = state.cur;
+  if (!cur) return;
+  var k1 = colorKey(1), k2 = colorKey(2), d1 = zoneColor(1), d2 = zoneColor(2);
+  if (k1) state.cmap[k1] = d1;
+  if (k2) state.cmap[k2] = d2;
+  delete cur.s1; delete cur.s2;
+  save(); updateColorUI(false); render({ pop: false });
+  el("colorStatus").textContent = "Цвета сохранены.";
+});
+el("btnForgetColors").addEventListener("click", function () {
+  var cur = state.cur;
+  if (!cur) return;
+  var k1 = colorKey(1), k2 = colorKey(2);
+  if (k1) delete state.cmap[k1];
+  if (k2) delete state.cmap[k2];
+  delete cur.s1; delete cur.s2;
+  save(); updateColorUI(false); render({ pop: false });
+  el("colorStatus").textContent = "Сохранённые цвета убраны, снова общие.";
+});
+armButton(el("btnForgetAll"), "Точно убрать все? Нажмите ещё раз", function () {
+  state.cmap = {};
+  if (state.cur) { delete state.cur.s1; delete state.cur.s2; }
+  save(); updateColorUI(false); render({ pop: false });
+  el("colorStatus").textContent = "Все сохранённые цвета убраны.";
+});
+el("btnSwapTop").addEventListener("click", swapColors);
+el("btnSwap2").addEventListener("click", swapColors);
 el("tab1").addEventListener("click", function () { tab = 1; updateColorUI(false); });
 el("tab2").addEventListener("click", function () { tab = 2; updateColorUI(false); });
 ["sH", "sS", "sL"].forEach(function (id) {
@@ -1261,7 +1373,7 @@ function syncSettings() {
   el("colorBox").className = state.randColors ? "dim" : "";
   el("colorNote").textContent = state.randColors
     ? "При каждом шаге обе зоны получают новые случайные цвета вместе с новым расположением. Выбранные ниже цвета сейчас не используются."
-    : "Первый цвет получает первое слово, второй цвет второе. Цвет остаётся у своего слова при смене расположения.";
+    : "Первый цвет получает первое слово, второй цвет второе. Цвет остаётся у своего слова при смене расположения. На главном экране кнопка «Цвета» меняет цвета слов местами.";
   document.querySelectorAll("#chips button").forEach(function (b) { b.className = state[b.getAttribute("data-k")] ? "sel" : ""; });
   setSegSel("#segOrder", function (v) { return (v === "1") === state.randLayout; });
   setSegSel("#segPair", function (v) { return v === state.newPair; });
@@ -1319,6 +1431,7 @@ function openSettings() {
   resumeAfter = running;
   if (running) pauseRun();
   syncSettings();
+  el("colorStatus").textContent = "";
   el("setSheet").classList.add("open");
 }
 function closeSettings() {
