@@ -67,6 +67,7 @@ main { flex: 1; min-height: 0; position: relative; }
 .label.pop span { -webkit-animation: pop .35s ease-out; animation: pop .35s ease-out; }
 @-webkit-keyframes pop { from { opacity: 0; -webkit-transform: scale(.88); } to { opacity: 1; -webkit-transform: none; } }
 @keyframes pop { from { opacity: 0; transform: scale(.88); } to { opacity: 1; transform: none; } }
+.label.num { font-family: "Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; font-weight: 600; letter-spacing: 0; white-space: pre-line; }
 .label.measure { visibility: hidden; -webkit-transition: none; transition: none; left: 0; top: 0; -webkit-transform: none; transform: none; }
 .stage.noanim .zone, .stage.noanim .label { -webkit-transition: none !important; transition: none !important; }
 
@@ -199,8 +200,12 @@ body.nosides .actions { max-width: none; left: 0; right: 0; padding: 0 8px; padd
     <div class="stage noanim" id="stage">
       <div class="zone" id="zoneA"></div>
       <div class="zone" id="zoneB"></div>
+      <div class="zone" id="zoneC" style="display:none"></div>
+      <div class="zone" id="zoneD" style="display:none"></div>
       <div class="label" id="lblA"><span></span></div>
       <div class="label" id="lblB"><span></span></div>
+      <div class="label" id="lblC" style="display:none"><span></span></div>
+      <div class="label" id="lblD" style="display:none"><span></span></div>
       <div class="label measure" id="measure"><span></span></div>
     </div>
   </main>
@@ -222,6 +227,7 @@ body.nosides .actions { max-width: none; left: 0; right: 0; padding: 0 8px; padd
     <div class="seg" id="segSource">
       <button type="button" data-v="emotions">Эмоции</button>
       <button type="button" data-v="polarities">Полярности</button>
+      <button type="button" data-v="arith">Арифметика</button>
     </div>
 
     <div id="polBox">
@@ -283,7 +289,31 @@ body.nosides .actions { max-width: none; left: 0; right: 0; padding: 0 8px; padd
       <div class="status" id="ioStatusEmo"></div>
     </div>
 
-    <h2>Цвета зон</h2>
+    <div id="arBox">
+      <p class="note">Несколько несложных примеров на экране одновременно: каждый в своём окне и своём цвете. Цель: решать их все сразу, расширяя поле зрения. Цвета, размер, управление, автоперемещение и экран работают так же, как в других вкладках.</p>
+      <h3>Категория</h3>
+      <div class="catlist" id="arCatList"></div>
+      <h3>Действия</h3>
+      <div class="seg" id="segArOps">
+        <button type="button" data-v="both">Сложение и вычитание</button>
+        <button type="button" data-v="add">Сложение</button>
+        <button type="button" data-v="sub">Вычитание</button>
+      </div>
+      <h3>Порядок примеров</h3>
+      <div class="seg" id="segArOrder">
+        <button type="button" data-v="random">Случайно</button>
+        <button type="button" data-v="list">По списку</button>
+      </div>
+      <h3>Ответ</h3>
+      <div class="seg" id="segArAns">
+        <button type="button" data-v="tap">По нажатию</button>
+        <button type="button" data-v="never">Скрыт</button>
+        <button type="button" data-v="always">Показан</button>
+      </div>
+      <p class="note" id="arAnsNote"></p>
+    </div>
+
+    <h2 id="colorsH">Цвета зон</h2>
     <div class="seg" id="segColors">
       <button type="button" data-v="0">Мои цвета</button>
       <button type="button" data-v="1">Случайные</button>
@@ -293,20 +323,25 @@ body.nosides .actions { max-width: none; left: 0; right: 0; padding: 0 8px; padd
       <div class="ctabs">
         <button class="ctab" id="tab1" type="button"></button>
         <button class="ctab" id="tab2" type="button"></button>
+        <button class="ctab" id="tab3" type="button" style="display:none"></button>
+        <button class="ctab" id="tab4" type="button" style="display:none"></button>
       </div>
       <p class="note" id="zoneNote"></p>
       <div class="palette" id="palette"></div>
       <div class="slrow"><span>Оттенок</span><input type="range" id="sH" min="0" max="360" step="1" aria-label="Оттенок"></div>
       <div class="slrow"><span>Насыщенность</span><input type="range" id="sS" min="0" max="100" step="1" aria-label="Насыщенность"></div>
       <div class="slrow"><span>Яркость</span><input type="range" id="sL" min="8" max="94" step="1" aria-label="Яркость"></div>
-      <div class="preview"><div id="pv1"></div><div id="pv2"></div></div>
+      <div class="preview"><div id="pv1"></div><div id="pv2"></div><div id="pv3" style="display:none"></div><div id="pv4" style="display:none"></div></div>
+      <div id="savedBox">
       <h3>Сохранённые цвета</h3>
       <p class="note" id="savedNote"></p>
       <div class="row"><button class="btn primary" id="btnSaveColors" type="button">Сохранить цвета</button><button class="btn" id="btnForgetColors" type="button">Убрать сохранённые</button></div>
       <div class="row" id="rowForgetAll"><button class="btn" id="btnForgetAll" type="button">Убрать все сохранённые цвета</button></div>
       <div class="status" id="colorStatus"></div>
+      </div>
     </div>
 
+    <div id="wordsSec">
     <h2>Слова на экране</h2>
     <div class="seg" id="segWords">
       <button type="button" data-v="2">Две эмоции</button>
@@ -323,7 +358,9 @@ body.nosides .actions { max-width: none; left: 0; right: 0; padding: 0 8px; padd
       </div>
     </div>
 
-    <h2>Размер слов</h2>
+    </div>
+
+    <h2 id="sizeH">Размер слов</h2>
     <div class="seg" id="segSame">
       <button type="button" data-v="1">Одинаковый у двух слов</button>
       <button type="button" data-v="0">Каждое по своей зоне</button>
@@ -335,10 +372,13 @@ body.nosides .actions { max-width: none; left: 0; right: 0; padding: 0 8px; padd
     <h3>По вертикали</h3>
     <div class="stepper"><button type="button" id="fszMinus_v" aria-label="Меньше">−</button><div class="val" id="fszVal_v">Авто</div><button type="button" id="fszPlus_v" aria-label="Больше">+</button></div>
     <div class="slrow"><input type="range" id="fszRange_v" min="10" max="160" step="1" aria-label="Размер по вертикали"><button class="btn" type="button" id="fszAuto_v" style="margin-left:10px;padding:10px 14px">Авто</button></div>
+    <div id="fszDiag">
     <h3>По диагонали</h3>
     <div class="stepper"><button type="button" id="fszMinus_d" aria-label="Меньше">−</button><div class="val" id="fszVal_d">Авто</div><button type="button" id="fszPlus_d" aria-label="Больше">+</button></div>
     <div class="slrow"><input type="range" id="fszRange_d" min="10" max="160" step="1" aria-label="Размер по диагонали"><button class="btn" type="button" id="fszAuto_d" style="margin-left:10px;padding:10px 14px">Авто</button></div>
+    </div>
 
+    <div id="layoutSec">
     <h2>Расположение</h2>
     <div class="chips" id="chips">
       <button type="button" data-k="hor">Горизонтально</button>
@@ -356,6 +396,24 @@ body.nosides .actions { max-width: none; left: 0; right: 0; padding: 0 8px; padd
       <button type="button" data-v="each">Пара на каждом шаге</button>
     </div>
     <p class="note">Когда выбранные расположения для одной пары закончились, появляется следующая. Режим «на каждом шаге» меняет пару при каждом движении.</p>
+
+    </div>
+
+    <div id="arLayoutSec">
+      <h2>Окна</h2>
+      <h3>В горизонтальном положении</h3>
+      <div class="seg" id="segArWinL">
+        <button type="button" data-v="2">2 окна</button>
+        <button type="button" data-v="3">3 окна</button>
+        <button type="button" data-v="4">4 окна</button>
+      </div>
+      <h3>В вертикальном положении</h3>
+      <div class="seg" id="segArWinP">
+        <button type="button" data-v="2">2 окна</button>
+        <button type="button" data-v="3">3 окна</button>
+      </div>
+      <p class="note">Сколько примеров показывать одновременно. В горизонтальном положении окна стоят в ряд слева направо, в вертикальном: друг под другом сверху вниз. Набор выбирается сам, когда вы поворачиваете экран.</p>
+    </div>
 
     <h2>Управление</h2>
     <div class="seg" id="segCtrl">
@@ -394,7 +452,7 @@ body.nosides .actions { max-width: none; left: 0; right: 0; padding: 0 8px; padd
     <div class="seg" id="segAuto">
       <button type="button" data-v="off">Выкл</button>
       <button type="button" data-v="fwd">Вперёд</button>
-      <button type="button" data-v="pp">Назад-Вперёд</button>
+      <button type="button" data-v="pp" id="btnAutoPP">Назад-Вперёд</button>
     </div>
     <div id="autoBox">
       <h3>Время</h3>
@@ -430,7 +488,7 @@ body.nosides .actions { max-width: none; left: 0; right: 0; padding: 0 8px; padd
       <button class="btn" id="btnBuiltin" type="button">Сбросить список эмоций</button>
       <button class="btn" id="btnTheme" type="button">Тема: тёмная</button>
     </div>
-    <p class="note">«Сбросить список эмоций» возвращает исходный список и убирает ваши добавления, удаления и изменения текста. Кнопка срабатывает со второго нажатия, и сброс можно отменить.</p>
+    <p class="note" id="resetNote">«Сбросить список эмоций» возвращает исходный список и убирает ваши добавления, удаления и изменения текста. Кнопка срабатывает со второго нажатия, и сброс можно отменить.</p>
     <p class="note" id="info"></p>
   </div>
 </div>
@@ -472,14 +530,23 @@ var state = {
   items: DEFAULT_ITEMS, base: DEFAULT_ITEMS, src: "builtin", theme: "dark", source: "emotions",
   emo: { removed: [], added: [], edits: {}, pinned: null, pinned2: null, order: "random", ptr: 0 },
   pol: { cat: "all", order: "list", pinned: null, custom: [], removed: [], edits: {}, ptr: 0 },
+  ar: { cat: "1-10", ops: "both", order: "random", ans: "tap", winL: 2, winP: 2, ptr: 0, colors: ["#35629e", "#2e8a86", "#7a5aa0", "#a0683a"], fsz: { h: 0, v: 0 } },
   c1: "#35629e", c2: "#2e8a86", cmap: {}, hor: true, ver: true, diag: true,
   words: 2, side: "first", sameSize: true, fsz: { h: 0, v: 0, d: 0 }, randLayout: false, randColors: false, newPair: "after",
   ctrl: "buttons", full: false, hideTop: false, sideOff: false, sideGap: 0, autoMode: "off", autoScope: "random", ppAxis: "h", minS: 3, maxS: 8,
   undo: null, cur: null, ptr: 0, pairNo: 0
 };
 var emoMeta = {};
+/* арифметика: категория задаётся диапазоном «большого» числа (сумма или уменьшаемое); остальные числа от 1 */
+var AR_CATS = [
+  { id: "1-10", name: "От 1 до 10", lo: 1, hi: 10 },
+  { id: "10-20", name: "От 10 до 20", lo: 10, hi: 20 },
+  { id: "1-20", name: "От 1 до 20", lo: 1, hi: 20 },
+  { id: "1-30", name: "От 1 до 30", lo: 1, hi: 30 },
+  { id: "20-30", name: "От 20 до 30", lo: 20, hi: 30 }
+];
 var tab = 1;
-var deck = [], polDeck = [], hist = [];
+var deck = [], polDeck = [], arDeck = [], hist = [];
 var running = false, remaining = 0, nextAt = 0, tmr = null, resumeAfter = false;
 var pp = { i: 0, dir: 1 };
 
@@ -536,6 +603,19 @@ var LAYOUTS = {
   D1: { A: "TL", B: "BR" }, D2: { A: "BR", B: "TL" },
   D3: { A: "TR", B: "BL" }, D4: { A: "BL", B: "TR" }
 };
+/* окна арифметики: C<n>_<i> — n окон в ряд (горизонтально), R<n>_<i> — n окон друг под другом (вертикально) */
+(function () {
+  var n, i, a, b;
+  function r3(v) { return Math.round(v * 1000) / 1000; }
+  for (n = 2; n <= 4; n++) for (i = 0; i < n; i++) {
+    a = r3(100 * i / n); b = r3(100 * (i + 1) / n);
+    SLOTS["C" + n + "_" + i] = { poly: [[a, 0], [b, 0], [b, 100], [a, 100]], cx: (a + b) / 2, cy: 50, w: (b - a) * 0.94, h: 70 };
+  }
+  for (n = 2; n <= 3; n++) for (i = 0; i < n; i++) {
+    a = r3(100 * i / n); b = r3(100 * (i + 1) / n);
+    SLOTS["R" + n + "_" + i] = { poly: [[0, a], [100, a], [100, b], [0, b]], cx: 50, cy: (a + b) / 2, w: 92, h: (b - a) * 0.8 };
+  }
+})();
 function enabledLayouts() {
   var L = [];
   if (state.hor) L.push("H1", "H2");
@@ -581,19 +661,35 @@ function randomColors() {
 /* цвета зон: сохранённые за парой (полярности) или за эмоцией, временные (после «Поменять местами») и общие */
 function colorKey(i) {
   var cur = state.cur;
+  if (state.source === "arith") return null;
   if (!cur) return null;
   if (cur.src === "pol") return "p:" + normS(cur.ta) + "|" + normS(cur.tb) + ":" + i;
   if (state.words === 1 && (cur.side === "B" ? 2 : 1) !== i) return null;
   return "e:" + normS(i === 1 ? cur.ta : cur.tb);
 }
 function isSaved(i) { var k = colorKey(i); return !!(k && isHex(state.cmap[k])); }
+function arColor(i) {
+  var cur = state.cur;
+  if (state.randColors && cur && cur.rc && isHex(cur.rc[i - 1])) return cur.rc[i - 1];
+  return state.ar.colors[i - 1];
+}
+function randomColorsN(n) {
+  var h0 = Math.floor(Math.random() * 360), out = [], i, h;
+  for (i = 0; i < n; i++) {
+    h = (h0 + Math.round(i * 360 / n) + Math.floor(Math.random() * 21) - 10 + 360) % 360;
+    out.push(hslToHex(h, 38 + Math.floor(Math.random() * 25), 28 + Math.floor(Math.random() * 19)));
+  }
+  return out;
+}
 function zoneColor(i) {
+  if (state.source === "arith") return arColor(i);
   var cur = state.cur, k = colorKey(i);
   if (cur && isHex(cur["s" + i])) return cur["s" + i];
   if (k && isHex(state.cmap[k])) return state.cmap[k];
   return i === 1 ? state.c1 : state.c2;
 }
 function writeZone(i, hex) {
+  if (state.source === "arith") { state.ar.colors[i - 1] = hex; return; }
   var cur = state.cur, k = colorKey(i);
   if (cur && isHex(cur["s" + i])) cur["s" + i] = hex;
   else if (k && isHex(state.cmap[k])) state.cmap[k] = hex;
@@ -603,6 +699,14 @@ function writeZone(i, hex) {
 function swapColors() {
   var cur = state.cur;
   if (!cur || !ready()) return;
+  if (state.source === "arith") {
+    var arr = (state.randColors && cur.rc) ? cur.rc : state.ar.colors, nw = arWinCount(), first = arr[0], q;
+    for (q = 0; q < nw - 1; q++) arr[q] = arr[q + 1];
+    arr[nw - 1] = first;
+    save(); render({ pop: false });
+    if (el("setSheet").classList.contains("open")) updateColorUI(false);
+    return;
+  }
   if (state.randColors) {
     var a = isHex(cur.c1) ? cur.c1 : state.c1, b = isHex(cur.c2) ? cur.c2 : state.c2;
     cur.c1 = b; cur.c2 = a;
@@ -670,6 +774,7 @@ function findEmo(t) {
   return -1;
 }
 function ready() {
+  if (state.source === "arith") return arPool().length > 0;
   return state.source === "polarities" ? (!!state.pol.pinned || polList().length > 0) : state.items.length >= (state.words === 1 ? 1 : 2);
 }
 
@@ -681,7 +786,7 @@ function save() {
       hor: state.hor, ver: state.ver, diag: state.diag,
       words: state.words, side: state.side, randLayout: state.randLayout, randColors: state.randColors, newPair: state.newPair,
       ctrl: state.ctrl, full: state.full, hideTop: state.hideTop, sideOff: state.sideOff, sideGap: state.sideGap, sameSize: state.sameSize, fsz: state.fsz, autoMode: state.autoMode, autoScope: state.autoScope, ppAxis: state.ppAxis, minS: state.minS, maxS: state.maxS,
-      pol: state.pol, emo: state.emo, undo: state.undo,
+      pol: state.pol, emo: state.emo, ar: state.ar, undo: state.undo,
       cur: state.cur, ptr: state.ptr, pairNo: state.pairNo
     };
     if (state.src === "custom") s.items = state.base;
@@ -704,7 +809,7 @@ function load() {
     var s = JSON.parse(raw);
     if (!s) { rebuildItems(); return; }
     if (s.src === "custom" && s.items && s.items.length) { state.base = s.items; state.src = "custom"; }
-    state.source = s.source === "polarities" ? "polarities" : "emotions";
+    state.source = (s.source === "polarities" || s.source === "arith") ? s.source : "emotions";
     state.theme = s.theme || "dark";
     if (isHex(s.c1)) state.c1 = s.c1;
     if (isHex(s.c2)) state.c2 = s.c2;
@@ -727,6 +832,19 @@ function load() {
     state.minS = clampS(s.minS, 3); state.maxS = clampS(s.maxS, 8);
     if (state.minS > state.maxS) state.maxS = state.minS;
     state.ptr = s.ptr || 0; state.pairNo = s.pairNo || 0;
+    var a = s.ar;
+    if (a && typeof a === "object") {
+      var q, w;
+      for (q = 0; q < AR_CATS.length; q++) if (AR_CATS[q].id === a.cat) state.ar.cat = a.cat;
+      state.ar.ops = (a.ops === "add" || a.ops === "sub") ? a.ops : "both";
+      state.ar.order = a.order === "list" ? "list" : "random";
+      state.ar.ans = (a.ans === "never" || a.ans === "always") ? a.ans : "tap";
+      w = parseInt(a.winL, 10); state.ar.winL = (w >= 2 && w <= 4) ? w : 2;
+      w = parseInt(a.winP, 10); state.ar.winP = (w >= 2 && w <= 3) ? w : 2;
+      state.ar.ptr = parseInt(a.ptr, 10) || 0;
+      if (Array.isArray(a.colors)) for (q = 0; q < 4; q++) if (isHex(a.colors[q])) state.ar.colors[q] = a.colors[q];
+      if (a.fsz && typeof a.fsz === "object") ["h", "v"].forEach(function (k) { var v = parseInt(a.fsz[k], 10); state.ar.fsz[k] = (v >= 10 && v <= 160) ? v : 0; });
+    }
     var p = s.pol;
     if (p) {
       if (Array.isArray(p.custom)) state.pol.custom = p.custom.filter(function (x) { return x && isStr(x.a) && isStr(x.b); }).map(function (x) { return { a: x.a, b: x.b, cat: "Мои пары", custom: true }; });
@@ -755,7 +873,8 @@ function load() {
     }
     rebuildItems();
     var c = s.cur, wantPol = state.source === "polarities";
-    if (c && isStr(c.ta) && isStr(c.tb) && LAYOUTS[c.layout] && Array.isArray(c.queue) && (wantPol === (c.src === "pol"))) {
+    if (state.source === "arith") { arRestore(c); }
+    else if (c && isStr(c.ta) && isStr(c.tb) && LAYOUTS[c.layout] && Array.isArray(c.queue) && (wantPol === (c.src === "pol"))) {
       c.queue = c.queue.filter(function (x) { return LAYOUTS[x]; });
       if (!isHex(c.c1) || !isHex(c.c2)) { delete c.c1; delete c.c2; }
       if (!isHex(c.s1) || !isHex(c.s2)) { delete c.s1; delete c.s2; }
@@ -842,6 +961,7 @@ function makePair() {
 function pushHist(cur) { hist.push(clone(cur)); if (hist.length > 100) hist.shift(); }
 function nextStep() {
   if (!ready()) return;
+  if (state.source === "arith") { nextArith(); return; }
   var cur = state.cur, fresh = false;
   if (!cur || !cur.queue.length) {
     var np = makePair();
@@ -871,7 +991,7 @@ function rebuildQueue() {
   }
   save(); render({ pop: false });
 }
-function resetPairs() { deck = []; polDeck = []; hist = []; state.cur = null; state.pairNo = 0; remaining = 0; }
+function resetPairs() { deck = []; polDeck = []; arDeck = []; hist = []; state.cur = null; state.pairNo = 0; remaining = 0; }
 
 /* туда-обратно */
 function ppSeq() { return ({ h: ["H1", "H2"], v: ["V1", "V2"], d1: ["D1", "D2"], d2: ["D3", "D4"], d3: ["D1", "D4"], d12: ["D1", "D2", "D3", "D4"] })[state.ppAxis]; }
@@ -997,6 +1117,7 @@ function place(who, slotName, info, color, manual) {
   lbl.firstChild.textContent = info.text;
 }
 function barFraction(cur) {
+  if (cur.src === "ar") { var pl = arPool().length; return pl ? (state.ar.order === "list" ? (state.ar.ptr % pl) / pl : (pl - arDeck.length) / pl) : 0; }
   if (cur.src === "pol") {
     if (cur.pinned || !cur.n) return (cur.total - cur.queue.length) / Math.max(cur.total, 1);
     return cur.order === "random" ? cur.cov : cur.pos / cur.n;
@@ -1028,6 +1149,8 @@ function autoGapPct() {
 }
 function render(opts) {
   applyBody();
+  if (state.source === "arith") { renderArith(opts); return; }
+  setNumFont(false); hideAr(2); hideAr(3);
   var cur = state.cur;
   if (!ready()) {
     el("counterTop").textContent = state.source === "polarities" ? "Нет пар" : "Мало эмоций (нужно минимум 2)";
@@ -1067,9 +1190,151 @@ function setControls() {
   el("btnBack").style.visibility = hist.length ? "visible" : "hidden";
 }
 
+/* ---------- арифметика ---------- */
+var arCache = { key: "", list: [] };
+function arBuild(catId, ops) {
+  var c = null, i, out = [], s, x, y;
+  for (i = 0; i < AR_CATS.length; i++) if (AR_CATS[i].id === catId) c = AR_CATS[i];
+  if (!c) c = AR_CATS[0];
+  if (ops !== "sub") for (s = c.lo; s <= c.hi; s++) for (x = 1; x < s; x++) out.push({ x: x, y: s - x, op: "+", r: s });
+  if (ops !== "add") for (s = c.lo; s <= c.hi; s++) for (y = 1; y < s; y++) out.push({ x: s, y: y, op: "\u2212", r: s - y });
+  return out;
+}
+function arPool() {
+  var key = state.ar.cat + "|" + state.ar.ops;
+  if (arCache.key !== key) { arCache.list = arBuild(state.ar.cat, state.ar.ops); arCache.key = key; }
+  return arCache.list;
+}
+function arCatName() {
+  for (var i = 0; i < AR_CATS.length; i++) if (AR_CATS[i].id === state.ar.cat) return AR_CATS[i].name;
+  return "";
+}
+function arLand() { return (window.innerWidth || document.documentElement.clientWidth) > (window.innerHeight || document.documentElement.clientHeight); }
+function arWinCount() { return arLand() ? Math.max(2, Math.min(4, state.ar.winL)) : Math.max(2, Math.min(3, state.ar.winP)); }
+function arHas(list, e) { for (var i = 0; i < list.length; i++) if (list[i].x === e.x && list[i].y === e.y && list[i].op === e.op) return true; return false; }
+function arDraw(avoid) {
+  var pool = arPool(), a = state.ar, tries = 0, idx, e;
+  if (!pool.length) return null;
+  while (tries < pool.length + 5) {
+    tries++;
+    if (a.order === "list") { idx = a.ptr % pool.length; a.ptr = idx + 1; }
+    else { if (!arDeck.length) arDeck = shuffle(range(pool.length)); idx = arDeck.pop(); }
+    e = pool[idx];
+    if (!arHas(avoid, e)) return { x: e.x, y: e.y, op: e.op, r: e.r };
+  }
+  e = pool[0];
+  return { x: e.x, y: e.y, op: e.op, r: e.r };
+}
+function ensureEq(cur, n) {
+  var added = false, e;
+  while (cur.eq.length < n) { e = arDraw(cur.eq); if (!e) break; cur.eq.push(e); added = true; }
+  if (added) save();
+}
+function makeArith() {
+  var n = arWinCount(), eq = [], e, i;
+  for (i = 0; i < n; i++) { e = arDraw(eq); if (e) eq.push(e); }
+  state.pairNo++;
+  var cur = { src: "ar", eq: eq, rev: [], no: state.pairNo };
+  if (state.randColors) cur.rc = randomColorsN(4);
+  return cur;
+}
+function nextArith() {
+  if (state.cur) pushHist(state.cur);
+  state.cur = makeArith();
+  save(); render({ pop: true });
+}
+function validEq(e) {
+  return e && isFinite(e.x) && isFinite(e.y) && isFinite(e.r) && (e.op === "+" || e.op === "\u2212") && e.x === Math.floor(e.x) && e.y === Math.floor(e.y) && e.r === Math.floor(e.r);
+}
+function arRestore(c) {
+  if (!c || c.src !== "ar" || !Array.isArray(c.eq)) return;
+  c.eq = c.eq.filter(validEq);
+  if (!c.eq.length) return;
+  c.rev = [];
+  if (!Array.isArray(c.rc) || c.rc.length < 4 || !c.rc.every(isHex)) delete c.rc;
+  c.no = c.no || 0;
+  state.cur = c;
+}
+function eqText(e, shown) {
+  var N = "\u00A0";
+  return e.x + N + e.op + N + e.y + (shown ? "\n=" + N + e.r : "");
+}
+function setNumFont(on) {
+  ["lblA", "lblB", "lblC", "lblD", "measure"].forEach(function (id) { if (on) el(id).classList.add("num"); else el(id).classList.remove("num"); });
+}
+function hideAr(i) {
+  var w = "ABCD".charAt(i);
+  el("zone" + w).style.display = "none";
+  el("lbl" + w).style.display = "none";
+}
+function placeAr(i, slotName, text, fs, color) {
+  var w = "ABCD".charAt(i), zone = el("zone" + w), lbl = el("lbl" + w), s = SLOTS[slotName], b = boxOf(slotName);
+  var poly = "polygon(" + s.poly.map(function (p) { return p[0] + "% " + p[1] + "%"; }).join(",") + ")";
+  zone.style.display = ""; lbl.style.display = "";
+  zone.style.clipPath = poly; zone.style.webkitClipPath = poly;
+  zone.style.backgroundColor = color;
+  lbl.style.left = s.cx + "%"; lbl.style.top = s.cy + "%";
+  lbl.style.width = (b.w > 0 ? b.w : 100) + "px";
+  lbl.style.fontSize = fs + "px";
+  lbl.style.color = inkFor(color);
+  lbl.classList.remove("brk");
+  lbl.firstChild.textContent = text;
+}
+function arBest(text, b) {
+  if (!(b.w > 0 && b.h > 0)) return 24;
+  var lo = 10, hi = Math.min(240, b.h), i, mid;
+  for (i = 0; i < 14; i++) { mid = (lo + hi) / 2; if (fitsAt(text, mid, b.w, b.h)) lo = mid; else hi = mid; }
+  return Math.max(10, Math.floor(lo));
+}
+function arFonts(names, full) {
+  var i, best = [], mn = 9999, man = state.ar.fsz[arLand() ? "h" : "v"], out = [];
+  for (i = 0; i < names.length; i++) { best.push(arBest(full[i], boxOf(names[i]))); if (best[i] < mn) mn = best[i]; }
+  for (i = 0; i < names.length; i++) {
+    if (man > 0) out.push(Math.min(man, mn));
+    else out.push(state.sameSize ? mn : best[i]);
+  }
+  return out;
+}
+function renderArith(opts) {
+  var cur = state.cur;
+  if (!cur || cur.src !== "ar") { nextArith(); return; }
+  var land = arLand(), n = arWinCount(), i, names = [], full = [], txt = [], cols = [], e, shown, fonts;
+  ensureEq(cur, n);
+  if (state.randColors && !cur.rc) cur.rc = randomColorsN(4);
+  setNumFont(true);
+  for (i = 0; i < n; i++) {
+    e = cur.eq[i];
+    if (!e) { n = i; break; }
+    shown = state.ar.ans === "always" || (state.ar.ans === "tap" && cur.rev && cur.rev[i]);
+    names.push((land ? "C" : "R") + n + "_" + i);
+    txt.push(eqText(e, shown)); full.push(eqText(e, state.ar.ans !== "never")); cols.push(zoneColor(i + 1));
+  }
+  fonts = arFonts(names, full);
+  for (i = 0; i < n; i++) placeAr(i, names[i], txt[i], fonts[i], cols[i]);
+  for (i = n; i < 4; i++) hideAr(i);
+  if (opts && opts.pop) {
+    for (i = 0; i < n; i++) { var l = el("lbl" + "ABCD".charAt(i)); l.classList.remove("pop"); void l.offsetWidth; l.classList.add("pop"); }
+  }
+  el("counterTop").textContent = arCatName() + " \u00B7 шаг " + cur.no;
+  el("barWrap").className = "progress" + (autoOn() ? " hidden" : "");
+  el("bar").style.width = (barFraction(cur) * 100) + "%";
+  setControls();
+}
+/* нажатие на окно: показать или скрыть ответ */
+stage.addEventListener("click", function (e) {
+  var cur = state.cur;
+  if (state.source !== "arith" || state.ar.ans !== "tap" || !cur || cur.src !== "ar" || sheetOpen()) return;
+  var r = stage.getBoundingClientRect(), n = arWinCount(), i;
+  i = arLand() ? Math.floor((e.clientX - r.left) / Math.max(1, r.width) * n) : Math.floor((e.clientY - r.top) / Math.max(1, r.height) * n);
+  i = Math.max(0, Math.min(n - 1, i));
+  if (!cur.rev) cur.rev = [];
+  cur.rev[i] = !cur.rev[i];
+  save(); render({ pop: false });
+});
+
 /* ---------- автоперемещение ---------- */
 function randDelay() { return (state.minS + Math.floor(Math.random() * Math.round((state.maxS - state.minS) * 2 + 1)) / 2) * 1000; }
-function autoTick() { if (state.autoMode === "pp") ppStep(); else nextStep(); }
+function autoTick() { if (state.autoMode === "pp" && state.source !== "arith") ppStep(); else nextStep(); }
 function schedule(ms) {
   clearTimeout(tmr);
   nextAt = Date.now() + ms;
@@ -1173,13 +1438,18 @@ function setColor(hex, fromSlider) {
   save(); updateColorUI(fromSlider); render({ pop: false });
 }
 function updateColorUI(fromSlider) {
-  [1, 2].forEach(function (i) {
-    var hex = zoneColor(i), t = el("tab" + i);
+  var isAr = state.source === "arith", nz = isAr ? arWinCount() : 2, qi;
+  if (tab > nz) tab = 1;
+  for (qi = 1; qi <= 4; qi++) {
+    var t = el("tab" + qi), pvq = el("pv" + qi);
+    if (qi > nz) { t.style.display = "none"; pvq.style.display = "none"; continue; }
+    t.style.display = ""; pvq.style.display = "";
+    var hex = zoneColor(qi);
     t.style.background = hex; t.style.color = inkFor(hex);
-    t.innerHTML = "Цвет " + i + "<small>" + hex.toUpperCase() + "</small>";
-    t.className = "ctab" + (tab === i ? " sel" : "");
-    el("pv" + i).style.background = hex;
-  });
+    t.innerHTML = (isAr ? "Окно " : "Цвет ") + qi + "<small>" + hex.toUpperCase() + "</small>";
+    t.className = "ctab" + (tab === qi ? " sel" : "");
+    pvq.style.background = hex;
+  }
   var cur = curColor(), hsl = hexToHsl(cur);
   document.querySelectorAll("#palette button").forEach(function (b) {
     b.className = b.getAttribute("data-c").toLowerCase() === cur.toLowerCase() ? "sel" : "";
@@ -1199,6 +1469,12 @@ function pairTitle() {
   return "«" + c.ta + "» и «" + c.tb + "»";
 }
 function updateSavedUI() {
+  if (state.source === "arith") {
+    el("savedBox").style.display = "none";
+    el("zoneNote").textContent = "Окна считаются " + (arLand() ? "слева направо" : "сверху вниз") + ". Показаны цвета тех окон, что сейчас на экране.";
+    return;
+  }
+  el("savedBox").style.display = "";
   var cur = state.cur, pol = state.source === "polarities", n = 0, k;
   for (k in state.cmap) if (state.cmap.hasOwnProperty(k)) n++;
   var keys = (colorKey(1) ? 1 : 0) + (colorKey(2) ? 1 : 0), sv = (isSaved(1) ? 1 : 0) + (isSaved(2) ? 1 : 0);
@@ -1249,6 +1525,8 @@ el("btnSwapTop").addEventListener("click", swapColors);
 el("btnSwap2").addEventListener("click", swapColors);
 el("tab1").addEventListener("click", function () { tab = 1; updateColorUI(false); });
 el("tab2").addEventListener("click", function () { tab = 2; updateColorUI(false); });
+el("tab3").addEventListener("click", function () { tab = 3; updateColorUI(false); });
+el("tab4").addEventListener("click", function () { tab = 4; updateColorUI(false); });
 ["sH", "sS", "sL"].forEach(function (id) {
   el(id).addEventListener("input", function () {
     setColor(hslToHex(+el("sH").value, +el("sS").value, +el("sL").value), true);
@@ -1357,12 +1635,22 @@ function renderEmoWork() {
   p.className = "note"; p.textContent = msg;
   box.appendChild(p);
 }
+function fszObj() { return state.source === "arith" ? state.ar.fsz : state.fsz; }
 function syncSettings() {
-  var pol = state.source === "polarities";
+  var pol = state.source === "polarities", ar = state.source === "arith";
   setSegSel("#segSource", function (v) { return v === state.source; });
   el("polBox").style.display = pol ? "" : "none";
-  el("emoBox").style.display = pol ? "none" : "";
-  el("btnBuiltin").style.display = pol ? "none" : "";
+  el("emoBox").style.display = (pol || ar) ? "none" : "";
+  el("arBox").style.display = ar ? "" : "none";
+  el("btnBuiltin").style.display = (pol || ar) ? "none" : "";
+  el("resetNote").style.display = ar ? "none" : "";
+  el("wordsSec").style.display = ar ? "none" : "";
+  el("layoutSec").style.display = ar ? "none" : "";
+  el("arLayoutSec").style.display = ar ? "" : "none";
+  el("fszDiag").style.display = ar ? "none" : "";
+  el("btnAutoPP").style.display = ar ? "none" : "";
+  el("colorsH").textContent = ar ? "Цвета окон" : "Цвета зон";
+  el("sizeH").textContent = ar ? "Размер примеров" : "Размер слов";
   setSegSel("#segPolOrder", function (v) { return v === state.pol.order; });
   setSegSel("#segEmoOrder", function (v) { return v === state.emo.order; });
   var names = pol ? { "2": "Оба полюса", "1": "Один полюс", "0": "Без слов" } : { "2": "Две эмоции", "1": "Одна эмоция", "0": "Без слов" };
@@ -1405,19 +1693,22 @@ function syncSettings() {
   el("gapVal").textContent = state.sideGap ? state.sideGap + " %" : "Авто";
   el("gapRange").value = state.sideGap || autoGapPct();
   setSegSel("#segSame", function (v) { return (v === "1") === state.sameSize; });
+  var sb = document.querySelectorAll("#segSame button");
+  sb[0].textContent = ar ? "Одинаковый во всех окнах" : "Одинаковый у двух слов";
+  sb[1].textContent = ar ? "Каждый по своему окну" : "Каждое по своей зоне";
   el("sizeNote").textContent = "«Авто»: самый крупный размер, который помещается в зону, а длинное слово при необходимости делится на две строки. Своё значение (в пикселях) задаёт один размер для всех слов в таких зонах: слова переносятся на вторую строку, слишком длинное слово делится. Изменения видны после закрытия настроек. Выбор «Одинаковый» работает в режиме «Авто».";
   ["h", "v", "d"].forEach(function (k) {
-    var v = state.fsz[k];
+    var v = fszObj()[k] || 0;
     el("fszVal_" + k).textContent = v ? v + " px" : "Авто";
     el("fszRange_" + k).value = v || curFont(k);
   });
   el("ctrlNote").textContent = state.ctrl === "swipe"
     ? "Кнопки «Назад» и «Далее» скрыты. Свайп вправо: вперёд, свайп влево: назад. Свайпайте по центру экрана, не от самого края, чтобы не сработал системный жест «Назад». В режиме автоперемещения остаётся кнопка «Старт/Пауза»."
     : "Назад и вперёд кнопками внизу экрана.";
-  setSegSel("#segAuto", function (v) { return v === state.autoMode; });
+  setSegSel("#segAuto", function (v) { return v === ((ar && state.autoMode === "pp") ? "fwd" : state.autoMode); });
   el("autoBox").style.display = autoOn() ? "" : "none";
-  el("fwdBox").style.display = state.autoMode === "fwd" ? "" : "none";
-  el("ppBox").style.display = state.autoMode === "pp" ? "" : "none";
+  el("fwdBox").style.display = (!ar && state.autoMode === "fwd") ? "" : "none";
+  el("ppBox").style.display = (!ar && state.autoMode === "pp") ? "" : "none";
   setSegSel("#segScope", function (v) { return v === state.autoScope; });
   el("scopeNote").textContent = ({
     one: "Остаётся одна пара: её расположения идут по кругу, пара не меняется.",
@@ -1428,7 +1719,15 @@ function syncSettings() {
   el("minVal").textContent = fmtS(state.minS);
   el("maxVal").textContent = fmtS(state.maxS);
   el("info").textContent = pol ? "Пар в выбранной категории: " + polList().length + "." : "Эмоций в списке: " + state.items.length + ".";
-  if (pol) {
+  if (ar) {
+    el("sizeNote").textContent = "«Авто»: самый крупный размер, при котором пример помещается в окно. Своё значение (в пикселях) задаёт один размер для всех окон; если пример при этом не помещается, он уменьшается. Изменения видны после закрытия настроек. Выбор «Одинаковый» работает в режиме «Авто».";
+    el("colorNote").textContent = state.randColors
+      ? "При каждом шаге все окна получают новые случайные цвета. Выбранные ниже цвета сейчас не используются."
+      : "У каждого окна свой цвет: цвет 1 у первого окна (слева или сверху). На главном экране кнопка «Цвета» сдвигает цвета по кругу.";
+    el("info").textContent = "Примеров в выбранной категории: " + arPool().length + ".";
+    renderArSettings();
+  }
+  else if (pol) {
     renderCatList(); renderPinInfo();
     var nr = state.pol.removed.length;
     el("rowRestorePol").style.display = nr ? "" : "none";
@@ -1459,6 +1758,42 @@ function closeSettings() {
 el("btnSettings").addEventListener("click", openSettings);
 el("btnSettings2").addEventListener("click", openSettings);
 el("btnClose").addEventListener("click", closeSettings);
+
+function renderArSettings() {
+  var a = state.ar, box = el("arCatList");
+  box.innerHTML = "";
+  AR_CATS.forEach(function (c) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = a.cat === c.id ? "sel" : "";
+    b.innerHTML = "<span>" + esc(c.name) + "</span><small>" + arBuild(c.id, a.ops).length + "</small>";
+    b.addEventListener("click", function () { arSetCat(c.id); });
+    box.appendChild(b);
+  });
+  setSegSel("#segArOps", function (v) { return v === a.ops; });
+  setSegSel("#segArOrder", function (v) { return v === a.order; });
+  setSegSel("#segArAns", function (v) { return v === a.ans; });
+  setSegSel("#segArWinL", function (v) { return parseInt(v, 10) === a.winL; });
+  setSegSel("#segArWinP", function (v) { return parseInt(v, 10) === a.winP; });
+  el("arAnsNote").textContent = a.ans === "tap" ? "Показан только пример. Нажмите на окно, чтобы увидеть ответ под ним; ещё раз, чтобы скрыть."
+    : (a.ans === "never" ? "Ответы не показываются, на экране только примеры." : "Ответ показывается сразу, под примером.");
+}
+function arSetCat(id) { state.ar.cat = id; state.ar.ptr = 0; resetPairs(); save(); syncSettings(); }
+document.querySelectorAll("#segArOps button").forEach(function (b) {
+  b.addEventListener("click", function () { state.ar.ops = b.getAttribute("data-v"); state.ar.ptr = 0; resetPairs(); save(); syncSettings(); });
+});
+document.querySelectorAll("#segArOrder button").forEach(function (b) {
+  b.addEventListener("click", function () { state.ar.order = b.getAttribute("data-v"); arDeck = []; save(); syncSettings(); });
+});
+document.querySelectorAll("#segArAns button").forEach(function (b) {
+  b.addEventListener("click", function () { state.ar.ans = b.getAttribute("data-v"); if (state.cur) state.cur.rev = []; save(); syncSettings(); });
+});
+document.querySelectorAll("#segArWinL button").forEach(function (b) {
+  b.addEventListener("click", function () { state.ar.winL = parseInt(b.getAttribute("data-v"), 10); save(); syncSettings(); });
+});
+document.querySelectorAll("#segArWinP button").forEach(function (b) {
+  b.addEventListener("click", function () { state.ar.winP = parseInt(b.getAttribute("data-v"), 10); save(); syncSettings(); });
+});
 
 /* ---------- настройки: что показывать ---------- */
 document.querySelectorAll("#segSource button").forEach(function (b) {
@@ -1750,7 +2085,7 @@ el("btnUndoEmo").addEventListener("click", function () {
   el("loadStatus").textContent = "Сброс отменён: ваш список возвращён.";
 });
 function freshEmo() { return { removed: [], added: [], edits: {}, pinned: null, pinned2: null, order: state.emo.order, ptr: 0 }; }
-function freshStart() { pauseRun(); resumeAfter = false; resetPairs(); state.ptr = 0; state.pol.ptr = 0; state.emo.ptr = 0; }
+function freshStart() { pauseRun(); resumeAfter = false; resetPairs(); state.ptr = 0; state.pol.ptr = 0; state.emo.ptr = 0; state.ar.ptr = 0; }
 el("btnRestart").addEventListener("click", function () {
   freshStart(); save(); el("setSheet").classList.remove("open"); render({ pop: true });
 });
@@ -1777,7 +2112,7 @@ document.querySelectorAll("#segColors button").forEach(function (b) {
     var on = b.getAttribute("data-v") === "1";
     if (on === state.randColors) return;
     state.randColors = on;
-    if (on && state.cur) { var rc = randomColors(); state.cur.c1 = rc[0]; state.cur.c2 = rc[1]; }
+    if (on && state.cur) { if (state.source === "arith") state.cur.rc = randomColorsN(4); else { var rc = randomColors(); state.cur.c1 = rc[0]; state.cur.c2 = rc[1]; } }
     save(); syncSettings(); render({ pop: false });
   });
 });
@@ -1813,6 +2148,10 @@ document.querySelectorAll("#segPair button").forEach(function (b) {
 });
 function curFont(k) {
   var cur = state.cur;
+  if (state.source === "arith") {
+    if (cur && (arLand() ? "h" : "v") === k) { var av = parseFloat(el("lblA").style.fontSize); if (av > 0) return Math.max(10, Math.min(160, Math.round(av))); }
+    return 40;
+  }
   if (cur && famOf(LAYOUTS[cur.layout].A) === k) {
     var l = el("lblA").style.display !== "none" ? el("lblA") : el("lblB");
     var v = parseFloat(l.style.fontSize);
@@ -1824,12 +2163,12 @@ function curFont(k) {
   function setF(v, full) {
     v = Math.max(0, Math.min(160, v));
     if (v > 0 && v < 10) v = 10;
-    state.fsz[k] = v; save();
+    fszObj()[k] = v; save();
     if (full) syncSettings(); else el("fszVal_" + k).textContent = v ? v + " px" : "Авто";
     render({ pop: false });
   }
-  el("fszMinus_" + k).addEventListener("click", function () { setF((state.fsz[k] || curFont(k)) - 2, true); });
-  el("fszPlus_" + k).addEventListener("click", function () { setF((state.fsz[k] || curFont(k)) + 2, true); });
+  el("fszMinus_" + k).addEventListener("click", function () { setF((fszObj()[k] || curFont(k)) - 2, true); });
+  el("fszPlus_" + k).addEventListener("click", function () { setF((fszObj()[k] || curFont(k)) + 2, true); });
   el("fszRange_" + k).addEventListener("input", function () { setF(parseInt(this.value, 10), false); });
   el("fszAuto_" + k).addEventListener("click", function () { setF(0, true); });
 });
