@@ -186,6 +186,23 @@ body.nosides .actions { max-width: none; left: 0; right: 0; padding: 0 8px; padd
 .slrow input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 28px; height: 28px; border-radius: 50%; background: #fff; border: 3px solid #222; box-shadow: 0 1px 4px rgba(0,0,0,.4); }
 .preview { display: flex; border-radius: 16px; overflow: hidden; height: 76px; margin: 10px 0 4px; }
 .preview div { -webkit-box-flex: 1; flex: 1; }
+/* медитация: надпись «Вдох/Выдох» сверху и большая кнопка «Ритм» внизу */
+.rhythm { display: none; position: absolute; top: 0; left: 0; right: 0; height: 68px; height: var(--bh, 68px); border-radius: 18px; align-items: center; justify-content: center; text-align: center; font-weight: 600; font-size: 34px; font-size: clamp(26px, 8vmin, 56px); letter-spacing: .03em; }
+.rbar { display: none; position: fixed; left: 0; right: 0; margin: 0 auto; max-width: 760px; bottom: 20px; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); padding: 0 16px; z-index: 3; }
+.rbar button { display: block; width: 100%; height: 128px; height: var(--rh, 128px); border-radius: 24px; border: 1px solid var(--line); background: var(--btn); color: var(--btn-ink); font: inherit; font-size: 30px; font-weight: 600; letter-spacing: .04em; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.rbar button:active { -webkit-transform: scale(.98); transform: scale(.98); }
+body.med { --rh: 128px; --bh: 68px; }
+@media (max-height: 480px) { body.med { --rh: 76px; --bh: 46px; } }
+body.med .rhythm { display: -webkit-box; display: -webkit-flex; display: flex; }
+body.med .rbar { display: block; }
+body.nosides .rbar { max-width: none; left: 0; right: 0; padding: 0 8px; }
+body.med .actions { bottom: 20px; bottom: calc(28px + var(--rh) + env(safe-area-inset-bottom, 0px)); }
+body.med .stage { top: 76px; top: calc(var(--bh) + 8px); bottom: 236px; bottom: calc(108px + var(--rh)); }
+body.med.swipe .stage { bottom: 148px; bottom: calc(20px + var(--rh)); }
+body.med.swipe.autoon .stage, body.med.swipe.notop .stage { bottom: 236px; bottom: calc(108px + var(--rh)); }
+body.med.swipe.full .stage, body.med.swipe.full.autoon .stage { bottom: 148px; bottom: calc(20px + var(--rh)); }
+body.med .stage, body.med .actions, body.med.swipe.autoon .actions { display: none; }
+body.med .rhythm { height: auto; bottom: 0; bottom: calc(28px + var(--rh) + env(safe-area-inset-bottom, 0px)); border-radius: 24px; font-size: 64px; font-size: clamp(40px, 16vmin, 140px); }
 </style>
 </head>
 <body>
@@ -197,6 +214,7 @@ body.nosides .actions { max-width: none; left: 0; right: 0; padding: 0 8px; padd
   </div>
   <div class="progress" id="barWrap"><i id="bar"></i></div>
   <main>
+    <div class="rhythm" id="rhythm"><span id="rhText"></span></div>
     <div class="stage noanim" id="stage">
       <div class="zone" id="zoneA"></div>
       <div class="zone" id="zoneB"></div>
@@ -210,6 +228,8 @@ body.nosides .actions { max-width: none; left: 0; right: 0; padding: 0 8px; padd
     </div>
   </main>
 </div>
+
+<div class="rbar" id="rbar"><button id="btnRhythm" type="button">Ритм</button></div>
 
 <div class="actions">
   <button class="btn2" id="btnBack" type="button">Назад</button>
@@ -228,6 +248,7 @@ body.nosides .actions { max-width: none; left: 0; right: 0; padding: 0 8px; padd
       <button type="button" data-v="emotions">Эмоции</button>
       <button type="button" data-v="polarities">Полярности</button>
       <button type="button" data-v="arith">Арифметика</button>
+      <button type="button" data-v="med">Медитация</button>
     </div>
 
     <div id="polBox">
@@ -313,6 +334,26 @@ body.nosides .actions { max-width: none; left: 0; right: 0; padding: 0 8px; padd
       <p class="note" id="arAnsNote"></p>
     </div>
 
+    <div id="medBox">
+      <p class="note">Цветные зоны с расположениями, как в других вкладках, но без слов. Внизу большая кнопка «Ритм»: сверху появляется «Вдох» или «Выдох» на цветном фоне. Цвета надписей выбираются ниже, в «Цветах зон и надписей» (вкладки «Вдох» и «Выдох»).</p>
+      <h3>Как работает «Ритм»</h3>
+      <div class="seg" id="segMedMode">
+        <button type="button" data-v="tap">Каждое нажатие меняет</button>
+        <button type="button" data-v="count">По числу нажатий</button>
+      </div>
+      <p class="note" id="medModeNote"></p>
+      <div id="medCountBox">
+        <h3>Нажатий на вдох</h3>
+        <div class="seg" id="segMedIn"><button type="button" data-v="2">2</button><button type="button" data-v="3">3</button><button type="button" data-v="4">4</button></div>
+        <h3>Нажатий на выдох</h3>
+        <div class="seg" id="segMedOut"><button type="button" data-v="2">2</button><button type="button" data-v="3">3</button><button type="button" data-v="4">4</button></div>
+        <h3>Пауза после последнего нажатия</h3>
+        <div class="stepper"><button type="button" id="medDelMinus" aria-label="Меньше">−</button><div class="val" id="medDelVal">1 с</div><button type="button" id="medDelPlus" aria-label="Больше">+</button></div>
+        <div class="slrow"><input type="range" id="medDelRange" min="1" max="100" step="1" aria-label="Пауза"></div>
+        <p class="note">От 0,1 до 10 секунд. Через это время после последнего нажатия надпись меняется.</p>
+      </div>
+    </div>
+
     <h2 id="colorsH">Цвета зон</h2>
     <div class="seg" id="segColors">
       <button type="button" data-v="0">Мои цвета</button>
@@ -360,6 +401,7 @@ body.nosides .actions { max-width: none; left: 0; right: 0; padding: 0 8px; padd
 
     </div>
 
+    <div id="sizeSec">
     <h2 id="sizeH">Размер слов</h2>
     <div class="seg" id="segSame">
       <button type="button" data-v="1">Одинаковый у двух слов</button>
@@ -376,6 +418,7 @@ body.nosides .actions { max-width: none; left: 0; right: 0; padding: 0 8px; padd
     <h3>По диагонали</h3>
     <div class="stepper"><button type="button" id="fszMinus_d" aria-label="Меньше">−</button><div class="val" id="fszVal_d">Авто</div><button type="button" id="fszPlus_d" aria-label="Больше">+</button></div>
     <div class="slrow"><input type="range" id="fszRange_d" min="10" max="160" step="1" aria-label="Размер по диагонали"><button class="btn" type="button" id="fszAuto_d" style="margin-left:10px;padding:10px 14px">Авто</button></div>
+    </div>
     </div>
 
     <div id="layoutSec">
@@ -531,7 +574,7 @@ var state = {
   emo: { removed: [], added: [], edits: {}, pinned: null, pinned2: null, order: "random", ptr: 0 },
   pol: { cat: "all", order: "list", pinned: null, custom: [], removed: [], edits: {}, ptr: 0 },
   ar: { cat: "1-10", ops: "both", order: "random", ans: "tap", winL: 2, winP: 2, ptr: 0, colors: ["#35629e", "#2e8a86", "#7a5aa0", "#a0683a"], fsz: { h: 0, v: 0 } },
-  c1: "#35629e", c2: "#2e8a86", cmap: {}, hor: true, ver: true, diag: true,
+  c1: "#35629e", c2: "#2e8a86", med: { mode: "tap", nIn: 2, nOut: 2, delay: 1, cIn: "#2f6f9f", cOut: "#9a6b2f" }, cmap: {}, hor: true, ver: true, diag: true,
   words: 2, side: "first", sameSize: true, fsz: { h: 0, v: 0, d: 0 }, randLayout: false, randColors: false, newPair: "after",
   ctrl: "buttons", full: false, hideTop: false, sideOff: false, sideGap: 0, autoMode: "off", autoScope: "random", ppAxis: "h", minS: 3, maxS: 8,
   undo: null, cur: null, ptr: 0, pairNo: 0
@@ -585,6 +628,7 @@ function shuffle(a) {
 function range(n) { var r = []; for (var i = 0; i < n; i++) r.push(i); return r; }
 function clone(o) { return JSON.parse(JSON.stringify(o)); }
 function autoOn() { return state.autoMode !== "off"; }
+function wN() { return state.source === "med" ? 0 : state.words; }
 
 /* ---------- геометрия расположений ---------- */
 var SLOTS = {
@@ -661,10 +705,10 @@ function randomColors() {
 /* цвета зон: сохранённые за парой (полярности) или за эмоцией, временные (после «Поменять местами») и общие */
 function colorKey(i) {
   var cur = state.cur;
-  if (state.source === "arith") return null;
+  if (state.source === "arith" || state.source === "med") return null;
   if (!cur) return null;
   if (cur.src === "pol") return "p:" + normS(cur.ta) + "|" + normS(cur.tb) + ":" + i;
-  if (state.words === 1 && (cur.side === "B" ? 2 : 1) !== i) return null;
+  if (wN() === 1 && (cur.side === "B" ? 2 : 1) !== i) return null;
   return "e:" + normS(i === 1 ? cur.ta : cur.tb);
 }
 function isSaved(i) { var k = colorKey(i); return !!(k && isHex(state.cmap[k])); }
@@ -683,6 +727,7 @@ function randomColorsN(n) {
 }
 function zoneColor(i) {
   if (state.source === "arith") return arColor(i);
+  if (state.source === "med" && i > 2) return i === 3 ? state.med.cIn : state.med.cOut;
   var cur = state.cur, k = colorKey(i);
   if (cur && isHex(cur["s" + i])) return cur["s" + i];
   if (k && isHex(state.cmap[k])) return state.cmap[k];
@@ -690,6 +735,7 @@ function zoneColor(i) {
 }
 function writeZone(i, hex) {
   if (state.source === "arith") { state.ar.colors[i - 1] = hex; return; }
+  if (state.source === "med" && i > 2) { if (i === 3) state.med.cIn = hex; else state.med.cOut = hex; return; }
   var cur = state.cur, k = colorKey(i);
   if (cur && isHex(cur["s" + i])) cur["s" + i] = hex;
   else if (k && isHex(state.cmap[k])) state.cmap[k] = hex;
@@ -775,7 +821,7 @@ function findEmo(t) {
 }
 function ready() {
   if (state.source === "arith") return arPool().length > 0;
-  return state.source === "polarities" ? (!!state.pol.pinned || polList().length > 0) : state.items.length >= (state.words === 1 ? 1 : 2);
+  return state.source === "polarities" ? (!!state.pol.pinned || polList().length > 0) : state.items.length >= (wN() === 1 ? 1 : 2);
 }
 
 /* ---------- сохранение ---------- */
@@ -786,7 +832,7 @@ function save() {
       hor: state.hor, ver: state.ver, diag: state.diag,
       words: state.words, side: state.side, randLayout: state.randLayout, randColors: state.randColors, newPair: state.newPair,
       ctrl: state.ctrl, full: state.full, hideTop: state.hideTop, sideOff: state.sideOff, sideGap: state.sideGap, sameSize: state.sameSize, fsz: state.fsz, autoMode: state.autoMode, autoScope: state.autoScope, ppAxis: state.ppAxis, minS: state.minS, maxS: state.maxS,
-      pol: state.pol, emo: state.emo, ar: state.ar, undo: state.undo,
+      pol: state.pol, emo: state.emo, ar: state.ar, med: state.med, undo: state.undo,
       cur: state.cur, ptr: state.ptr, pairNo: state.pairNo
     };
     if (state.src === "custom") s.items = state.base;
@@ -809,7 +855,7 @@ function load() {
     var s = JSON.parse(raw);
     if (!s) { rebuildItems(); return; }
     if (s.src === "custom" && s.items && s.items.length) { state.base = s.items; state.src = "custom"; }
-    state.source = (s.source === "polarities" || s.source === "arith") ? s.source : "emotions";
+    state.source = (s.source === "polarities" || s.source === "arith" || s.source === "med") ? s.source : "emotions";
     state.theme = s.theme || "dark";
     if (isHex(s.c1)) state.c1 = s.c1;
     if (isHex(s.c2)) state.c2 = s.c2;
@@ -844,6 +890,16 @@ function load() {
       state.ar.ptr = parseInt(a.ptr, 10) || 0;
       if (Array.isArray(a.colors)) for (q = 0; q < 4; q++) if (isHex(a.colors[q])) state.ar.colors[q] = a.colors[q];
       if (a.fsz && typeof a.fsz === "object") ["h", "v"].forEach(function (k) { var v = parseInt(a.fsz[k], 10); state.ar.fsz[k] = (v >= 10 && v <= 160) ? v : 0; });
+    }
+    var md = s.med;
+    if (md && typeof md === "object") {
+      var mv;
+      state.med.mode = md.mode === "count" ? "count" : "tap";
+      mv = parseInt(md.nIn, 10); state.med.nIn = (mv >= 2 && mv <= 4) ? mv : 2;
+      mv = parseInt(md.nOut, 10); state.med.nOut = (mv >= 2 && mv <= 4) ? mv : 2;
+      mv = Math.round(parseFloat(md.delay) * 10); state.med.delay = (mv >= 1 && mv <= 100) ? mv / 10 : 1;
+      if (isHex(md.cIn)) state.med.cIn = md.cIn;
+      if (isHex(md.cOut)) state.med.cOut = md.cOut;
     }
     var p = s.pol;
     if (p) {
@@ -926,9 +982,9 @@ function polPair() {
   return { a: list[idx].a, b: list[idx].b, lbl: lbl, pos: idx + 1, n: list.length, cov: cov, order: order };
 }
 function emoPair(side) {
-  var n = state.items.length, single = state.words === 1, e = state.emo, order = effOrder() || e.order;
+  var n = state.items.length, single = wN() === 1, e = state.emo, order = effOrder() || e.order;
   var i1 = e.pinned ? findEmo(e.pinned) : -1, i2 = e.pinned2 ? findEmo(e.pinned2) : -1;
-  if (state.words === 2 && i1 >= 0 && i2 >= 0 && i1 !== i2) return { a: state.items[i1], b: state.items[i2], pin: "pair" };
+  if (wN() === 2 && i1 >= 0 && i2 >= 0 && i1 !== i2) return { a: state.items[i1], b: state.items[i2], pin: "pair" };
   var d, o, pin = false;
   if (single && i1 >= 0) { d = i1; pin = true; }
   else if (order === "list") { d = e.ptr % n; e.ptr = d + 1; }
@@ -1131,15 +1187,17 @@ function applyBody() {
   var land = W > H && !fullOn;
   var off = land && state.sideOff, gap = (land && !state.sideOff && state.sideGap > 0) ? state.sideGap : 0;
   document.body.className = (state.ctrl === "swipe" ? "swipe" : "") + (fullOn ? " full" : "") + (autoOn() ? " autoon" : "") +
-    (state.hideTop && !fullOn ? " notop" : "") + (off ? " nosides" : "");
-  var app = document.querySelector(".app"), act = document.querySelector(".actions");
+    (state.hideTop && !fullOn ? " notop" : "") + (off ? " nosides" : "") + (state.source === "med" ? " med" : "");
+  var app = document.querySelector(".app"), act = document.querySelector(".actions"), rb = el("rbar");
   if (gap) {
     var pad = Math.round(W * gap / 100) + "px";
     app.style.maxWidth = "none"; app.style.paddingLeft = pad; app.style.paddingRight = pad;
     act.style.maxWidth = "none"; act.style.left = pad; act.style.right = pad; act.style.paddingLeft = "0"; act.style.paddingRight = "0";
+    rb.style.maxWidth = "none"; rb.style.left = pad; rb.style.right = pad; rb.style.paddingLeft = "0"; rb.style.paddingRight = "0";
   } else {
     app.style.maxWidth = ""; app.style.paddingLeft = ""; app.style.paddingRight = "";
     act.style.maxWidth = ""; act.style.left = ""; act.style.right = ""; act.style.paddingLeft = ""; act.style.paddingRight = "";
+    rb.style.maxWidth = ""; rb.style.left = ""; rb.style.right = ""; rb.style.paddingLeft = ""; rb.style.paddingRight = "";
   }
 }
 function autoGapPct() {
@@ -1148,7 +1206,7 @@ function autoGapPct() {
   return Math.max(1, Math.min(40, v || 10));
 }
 function render(opts) {
-  applyBody();
+  applyBody(); rhShow();
   if (state.source === "arith") { renderArith(opts); return; }
   setNumFont(false); hideAr(2); hideAr(3);
   var cur = state.cur;
@@ -1161,8 +1219,8 @@ function render(opts) {
   var k1 = state.randColors ? (isHex(cur.c1) ? cur.c1 : state.c1) : zoneColor(1);
   var k2 = state.randColors ? (isHex(cur.c2) ? cur.c2 : state.c2) : zoneColor(2);
   var side = cur.side === "B" ? "B" : "A";
-  var showA = state.words === 2 || (state.words === 1 && side === "A");
-  var showB = state.words === 2 || (state.words === 1 && side === "B");
+  var showA = wN() === 2 || (wN() === 1 && side === "A");
+  var showB = wN() === 2 || (wN() === 1 && side === "B");
   var fonts = resolveFonts(L, cur.ta, cur.tb, showA, showB), man = state.fsz[famOf(L.A)] > 0;
   place("A", L.A, showA ? fonts.A : null, k1, man);
   place("B", L.B, showB ? fonts.B : null, k2, man);
@@ -1175,7 +1233,7 @@ function render(opts) {
   var head;
   if (cur.src === "pol") head = cur.pinned ? "Закреплена" : (cur.order === "random" ? cur.lbl : cur.lbl + " " + cur.pos + "/" + cur.n);
   else if (cur.pinE) head = cur.pinE === "pair" ? "Закреплена пара" : "Закреплена";
-  else head = (state.words === 2 ? "Пара " : (state.words === 1 ? "Слово " : "Круг ")) + cur.no;
+  else head = (state.source === "med" ? "Медитация " : (wN() === 2 ? "Пара " : (wN() === 1 ? "Слово " : "Круг "))) + cur.no;
   el("counterTop").textContent = head + tail;
   el("barWrap").className = "progress" + (autoOn() ? " hidden" : "");
   el("bar").style.width = (barFraction(cur) * 100) + "%";
@@ -1389,7 +1447,7 @@ document.addEventListener("touchstart", function (e) {
   if (state.ctrl !== "swipe" || sheetOpen() || !e.touches || e.touches.length !== 1) { sw = null; return; }
   var t = e.target, x = e.touches[0].clientX, y = e.touches[0].clientY;
   var W = window.innerWidth || document.documentElement.clientWidth, H = window.innerHeight || document.documentElement.clientHeight;
-  var nav = !(t && t.closest && (t.closest(".top") || t.closest(".actions")));
+  var nav = !(t && t.closest && (t.closest(".top") || t.closest(".actions") || t.closest("#rbar")));
   // выход из полного экрана: начало в нижней трети, по центру
   var cx = x > W * 0.25 && x < W * 0.75;
   var exit = state.full && y > H * 0.66 && cx;
@@ -1438,7 +1496,7 @@ function setColor(hex, fromSlider) {
   save(); updateColorUI(fromSlider); render({ pop: false });
 }
 function updateColorUI(fromSlider) {
-  var isAr = state.source === "arith", nz = isAr ? arWinCount() : 2, qi;
+  var isAr = state.source === "arith", isMd = state.source === "med", nz = isAr ? arWinCount() : (isMd ? 4 : 2), qi;
   if (tab > nz) tab = 1;
   for (qi = 1; qi <= 4; qi++) {
     var t = el("tab" + qi), pvq = el("pv" + qi);
@@ -1446,7 +1504,7 @@ function updateColorUI(fromSlider) {
     t.style.display = ""; pvq.style.display = "";
     var hex = zoneColor(qi);
     t.style.background = hex; t.style.color = inkFor(hex);
-    t.innerHTML = (isAr ? "Окно " : "Цвет ") + qi + "<small>" + hex.toUpperCase() + "</small>";
+    t.innerHTML = (isAr ? "Окно " : (isMd && qi > 2 ? (qi === 3 ? "Вдох" : "Выдох") : "Цвет ")) + (isMd && qi > 2 ? "" : qi) + "<small>" + hex.toUpperCase() + "</small>";
     t.className = "ctab" + (tab === qi ? " sel" : "");
     pvq.style.background = hex;
   }
@@ -1465,10 +1523,15 @@ function pairTitle() {
   var c = state.cur, pol = state.source === "polarities";
   if (!c) return "";
   if (pol) return "«" + c.ta + " — " + c.tb + "»";
-  if (state.words === 1) return "«" + (c.side === "B" ? c.tb : c.ta) + "»";
+  if (wN() === 1) return "«" + (c.side === "B" ? c.tb : c.ta) + "»";
   return "«" + c.ta + "» и «" + c.tb + "»";
 }
 function updateSavedUI() {
+  if (state.source === "med") {
+    el("savedBox").style.display = "none";
+    el("zoneNote").textContent = "Цвет 1 и цвет 2: две зоны. «Вдох» и «Выдох»: фон надписи сверху. Выберите вкладку, затем цвет.";
+    return;
+  }
   if (state.source === "arith") {
     el("savedBox").style.display = "none";
     el("zoneNote").textContent = "Окна считаются " + (arLand() ? "слева направо" : "сверху вниз") + ". Показаны цвета тех окон, что сейчас на экране.";
@@ -1637,19 +1700,21 @@ function renderEmoWork() {
 }
 function fszObj() { return state.source === "arith" ? state.ar.fsz : state.fsz; }
 function syncSettings() {
-  var pol = state.source === "polarities", ar = state.source === "arith";
+  var pol = state.source === "polarities", ar = state.source === "arith", md = state.source === "med";
   setSegSel("#segSource", function (v) { return v === state.source; });
   el("polBox").style.display = pol ? "" : "none";
-  el("emoBox").style.display = (pol || ar) ? "none" : "";
+  el("emoBox").style.display = (pol || ar || md) ? "none" : "";
+  el("medBox").style.display = md ? "" : "none";
+  el("sizeSec").style.display = md ? "none" : "";
   el("arBox").style.display = ar ? "" : "none";
-  el("btnBuiltin").style.display = (pol || ar) ? "none" : "";
-  el("resetNote").style.display = ar ? "none" : "";
-  el("wordsSec").style.display = ar ? "none" : "";
+  el("btnBuiltin").style.display = (pol || ar || md) ? "none" : "";
+  el("resetNote").style.display = (ar || md) ? "none" : "";
+  el("wordsSec").style.display = (ar || md) ? "none" : "";
   el("layoutSec").style.display = ar ? "none" : "";
   el("arLayoutSec").style.display = ar ? "" : "none";
   el("fszDiag").style.display = ar ? "none" : "";
   el("btnAutoPP").style.display = ar ? "none" : "";
-  el("colorsH").textContent = ar ? "Цвета окон" : "Цвета зон";
+  el("colorsH").textContent = ar ? "Цвета окон" : (md ? "Цвета зон и надписей" : "Цвета зон");
   el("sizeH").textContent = ar ? "Размер примеров" : "Размер слов";
   setSegSel("#segPolOrder", function (v) { return v === state.pol.order; });
   setSegSel("#segEmoOrder", function (v) { return v === state.emo.order; });
@@ -1673,7 +1738,7 @@ function syncSettings() {
     b.className = v === state.side ? "sel" : "";
   });
   setSegSel("#segColors", function (v) { return (v === "1") === state.randColors; });
-  el("colorBox").className = state.randColors ? "dim" : "";
+  el("colorBox").className = (state.randColors && !md) ? "dim" : "";
   el("colorNote").textContent = state.randColors
     ? "При каждом шаге обе зоны получают новые случайные цвета вместе с новым расположением. Выбранные ниже цвета сейчас не используются."
     : "Первый цвет получает первое слово, второй цвет второе. Цвет остаётся у своего слова при смене расположения. На главном экране кнопка «Цвета» меняет цвета слов местами.";
@@ -1707,7 +1772,7 @@ function syncSettings() {
     : "Назад и вперёд кнопками внизу экрана.";
   setSegSel("#segAuto", function (v) { return v === ((ar && state.autoMode === "pp") ? "fwd" : state.autoMode); });
   el("autoBox").style.display = autoOn() ? "" : "none";
-  el("fwdBox").style.display = (!ar && state.autoMode === "fwd") ? "" : "none";
+  el("fwdBox").style.display = (!ar && !md && state.autoMode === "fwd") ? "" : "none";
   el("ppBox").style.display = (!ar && state.autoMode === "pp") ? "" : "none";
   setSegSel("#segScope", function (v) { return v === state.autoScope; });
   el("scopeNote").textContent = ({
@@ -1719,7 +1784,9 @@ function syncSettings() {
   el("minVal").textContent = fmtS(state.minS);
   el("maxVal").textContent = fmtS(state.maxS);
   el("info").textContent = pol ? "Пар в выбранной категории: " + polList().length + "." : "Эмоций в списке: " + state.items.length + ".";
-  if (ar) {
+  if (md) {
+    renderMedSettings();
+  } else if (ar) {
     el("sizeNote").textContent = "«Авто»: самый крупный размер, при котором пример помещается в окно. Своё значение (в пикселях) задаёт один размер для всех окон; если пример при этом не помещается, он уменьшается. Изменения видны после закрытия настроек. Выбор «Одинаковый» работает в режиме «Авто».";
     el("colorNote").textContent = state.randColors
       ? "При каждом шаге все окна получают новые случайные цвета. Выбранные ниже цвета сейчас не используются."
@@ -1795,12 +1862,66 @@ document.querySelectorAll("#segArWinP button").forEach(function (b) {
   b.addEventListener("click", function () { state.ar.winP = parseInt(b.getAttribute("data-v"), 10); save(); syncSettings(); });
 });
 
+/* ---------- медитация: ритм «Вдох / Выдох» ---------- */
+var rh = { ph: 0, n: 0, lock: false, tm: null };
+function rhShow() {
+  var b = el("rhythm"), t = el("rhText");
+  if (state.source !== "med" || !rh.ph) { b.style.background = "transparent"; t.textContent = ""; return; }
+  var hex = rh.ph === 1 ? state.med.cIn : state.med.cOut;
+  b.style.background = hex; b.style.color = inkFor(hex);
+  t.textContent = rh.ph === 1 ? "Вдох" : "Выдох";
+}
+function rhReset() { clearTimeout(rh.tm); rh.tm = null; rh.ph = 0; rh.n = 0; rh.lock = false; rhShow(); }
+function rhSwitch() { rh.tm = null; rh.ph = rh.ph === 1 ? 2 : 1; rh.n = 0; rh.lock = false; rhShow(); }
+function onRhythm() {
+  var m = state.med;
+  if (state.source !== "med" || sheetOpen()) return;
+  if (!rh.ph) { rh.ph = 1; rh.n = 0; rhShow(); return; }
+  if (m.mode === "tap") { rhSwitch(); return; }
+  if (rh.lock) return;
+  rh.n++;
+  if (rh.n >= (rh.ph === 1 ? m.nIn : m.nOut)) {
+    rh.lock = true;
+    rh.tm = setTimeout(rhSwitch, Math.round(m.delay * 1000));
+  }
+}
+el("btnRhythm").addEventListener("click", onRhythm);
+function renderMedSettings() {
+  var m = state.med;
+  setSegSel("#segMedMode", function (v) { return v === m.mode; });
+  setSegSel("#segMedIn", function (v) { return parseInt(v, 10) === m.nIn; });
+  setSegSel("#segMedOut", function (v) { return parseInt(v, 10) === m.nOut; });
+  el("medCountBox").style.display = m.mode === "count" ? "" : "none";
+  el("medModeNote").textContent = m.mode === "tap"
+    ? "Первое нажатие «Ритм» показывает «Вдох», следующее «Выдох», и так далее."
+    : "Первое нажатие показывает «Вдох». Дальше нажимайте «Ритм» заданное число раз, пока идёт вдох; после последнего нажатия, через паузу, появляется «Выдох». Так же на выдохе.";
+  el("medDelVal").textContent = String(m.delay).replace(".", ",") + " с";
+  el("medDelRange").value = Math.round(m.delay * 10);
+  el("colorNote").textContent = state.randColors
+    ? "Цвета зон меняются сами при каждом шаге. Цвета «Вдох» и «Выдох» задаются здесь."
+    : "Цвет 1 и цвет 2: две зоны, цвет остаётся у своей зоны при смене расположения. «Вдох» и «Выдох»: фон надписи сверху.";
+  el("info").textContent = "";
+}
+function setMedDelay(v) { v = Math.max(1, Math.min(100, Math.round(v * 10))); state.med.delay = v / 10; save(); syncSettings(); }
+document.querySelectorAll("#segMedMode button").forEach(function (b) {
+  b.addEventListener("click", function () { state.med.mode = b.getAttribute("data-v"); rhReset(); save(); syncSettings(); });
+});
+document.querySelectorAll("#segMedIn button").forEach(function (b) {
+  b.addEventListener("click", function () { state.med.nIn = parseInt(b.getAttribute("data-v"), 10); rhReset(); save(); syncSettings(); });
+});
+document.querySelectorAll("#segMedOut button").forEach(function (b) {
+  b.addEventListener("click", function () { state.med.nOut = parseInt(b.getAttribute("data-v"), 10); rhReset(); save(); syncSettings(); });
+});
+el("medDelMinus").addEventListener("click", function () { setMedDelay(state.med.delay - 0.1); });
+el("medDelPlus").addEventListener("click", function () { setMedDelay(state.med.delay + 0.1); });
+el("medDelRange").addEventListener("input", function () { setMedDelay(parseInt(this.value, 10) / 10); });
+
 /* ---------- настройки: что показывать ---------- */
 document.querySelectorAll("#segSource button").forEach(function (b) {
   b.addEventListener("click", function () {
     var v = b.getAttribute("data-v");
     if (v === state.source) return;
-    state.source = v; resetPairs(); save(); syncSettings();
+    rhReset(); state.source = v; resetPairs(); save(); syncSettings();
   });
 });
 function setCat(id) {
@@ -2085,7 +2206,7 @@ el("btnUndoEmo").addEventListener("click", function () {
   el("loadStatus").textContent = "Сброс отменён: ваш список возвращён.";
 });
 function freshEmo() { return { removed: [], added: [], edits: {}, pinned: null, pinned2: null, order: state.emo.order, ptr: 0 }; }
-function freshStart() { pauseRun(); resumeAfter = false; resetPairs(); state.ptr = 0; state.pol.ptr = 0; state.emo.ptr = 0; state.ar.ptr = 0; }
+function freshStart() { rhReset(); pauseRun(); resumeAfter = false; resetPairs(); state.ptr = 0; state.pol.ptr = 0; state.emo.ptr = 0; state.ar.ptr = 0; }
 el("btnRestart").addEventListener("click", function () {
   freshStart(); save(); el("setSheet").classList.remove("open"); render({ pop: true });
 });
