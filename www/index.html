@@ -203,6 +203,10 @@ body.med.swipe.autoon .stage, body.med.swipe.notop .stage { bottom: 236px; botto
 body.med.swipe.full .stage, body.med.swipe.full.autoon .stage { bottom: 148px; bottom: calc(20px + var(--rh)); }
 body.med .stage, body.med .actions, body.med.swipe.autoon .actions { display: none; }
 body.med .rhythm { height: auto; bottom: 0; bottom: calc(28px + var(--rh) + env(safe-area-inset-bottom, 0px)); border-radius: 24px; font-size: 64px; font-size: clamp(40px, 16vmin, 140px); }
+.rprog { display: none; height: 43px; height: calc(var(--rh, 128px) / 3); margin-bottom: 8px; border-radius: 14px; background: rgba(255,255,255,.08); overflow: hidden; }
+.rprog div { height: 100%; width: 0; }
+body.mauto .rprog { display: block; }
+body.mauto .rhythm { bottom: 0; bottom: calc(36px + var(--rh) * 4 / 3 + env(safe-area-inset-bottom, 0px)); }
 </style>
 </head>
 <body>
@@ -229,7 +233,7 @@ body.med .rhythm { height: auto; bottom: 0; bottom: calc(28px + var(--rh) + env(
   </main>
 </div>
 
-<div class="rbar" id="rbar"><button id="btnRhythm" type="button">Ритм</button></div>
+<div class="rbar" id="rbar"><div class="rprog"><div id="rprogFill"></div></div><button id="btnRhythm" type="button">Ритм</button></div>
 
 <div class="actions">
   <button class="btn2" id="btnBack" type="button">Назад</button>
@@ -340,6 +344,7 @@ body.med .rhythm { height: auto; bottom: 0; bottom: calc(28px + var(--rh) + env(
       <div class="seg" id="segMedMode">
         <button type="button" data-v="tap">Каждое нажатие меняет</button>
         <button type="button" data-v="count">По числу нажатий</button>
+        <button type="button" data-v="auto">Автопилот</button>
       </div>
       <p class="note" id="medModeNote"></p>
       <div id="medCountBox">
@@ -352,6 +357,9 @@ body.med .rhythm { height: auto; bottom: 0; bottom: calc(28px + var(--rh) + env(
         <div class="slrow"><input type="range" id="medDelRange" min="1" max="100" step="1" aria-label="Пауза"></div>
         <p class="note">От 0,1 до 10 секунд. Через это время после последнего нажатия надпись меняется.</p>
       </div>
+      <h3>Яркость окна «Вдох» / «Выдох»</h3>
+      <div class="stepper"><button type="button" id="medBriMinus" aria-label="Темнее">−</button><div class="val" id="medBriVal">100%</div><button type="button" id="medBriPlus" aria-label="Ярче">+</button></div>
+      <div class="slrow"><input type="range" id="medBriRange" min="10" max="100" step="5" aria-label="Яркость"></div>
     </div>
 
     <h2 id="colorsH">Цвета зон</h2>
@@ -574,7 +582,7 @@ var state = {
   emo: { removed: [], added: [], edits: {}, pinned: null, pinned2: null, order: "random", ptr: 0 },
   pol: { cat: "all", order: "list", pinned: null, custom: [], removed: [], edits: {}, ptr: 0 },
   ar: { cat: "1-10", ops: "both", order: "random", ans: "tap", winL: 2, winP: 2, ptr: 0, colors: ["#35629e", "#2e8a86", "#7a5aa0", "#a0683a"], fsz: { h: 0, v: 0 } },
-  c1: "#35629e", c2: "#2e8a86", med: { mode: "tap", nIn: 2, nOut: 2, delay: 1, cIn: "#2f6f9f", cOut: "#9a6b2f" }, cmap: {}, hor: true, ver: true, diag: true,
+  c1: "#35629e", c2: "#2e8a86", med: { bri: 100, mode: "tap", nIn: 2, nOut: 2, delay: 1, cIn: "#2f6f9f", cOut: "#9a6b2f" }, cmap: {}, hor: true, ver: true, diag: true,
   words: 2, side: "first", sameSize: true, fsz: { h: 0, v: 0, d: 0 }, randLayout: false, randColors: false, newPair: "after",
   ctrl: "buttons", full: false, hideTop: false, sideOff: false, sideGap: 0, autoMode: "off", autoScope: "random", ppAxis: "h", minS: 3, maxS: 8,
   undo: null, cur: null, ptr: 0, pairNo: 0
@@ -894,10 +902,11 @@ function load() {
     var md = s.med;
     if (md && typeof md === "object") {
       var mv;
-      state.med.mode = md.mode === "count" ? "count" : "tap";
+      state.med.mode = (md.mode === "count" || md.mode === "auto") ? md.mode : "tap";
       mv = parseInt(md.nIn, 10); state.med.nIn = (mv >= 2 && mv <= 4) ? mv : 2;
       mv = parseInt(md.nOut, 10); state.med.nOut = (mv >= 2 && mv <= 4) ? mv : 2;
       mv = Math.round(parseFloat(md.delay) * 10); state.med.delay = (mv >= 1 && mv <= 100) ? mv / 10 : 1;
+      mv = parseInt(md.bri, 10); state.med.bri = (mv >= 10 && mv <= 100) ? mv : 100;
       if (isHex(md.cIn)) state.med.cIn = md.cIn;
       if (isHex(md.cOut)) state.med.cOut = md.cOut;
     }
@@ -1187,7 +1196,7 @@ function applyBody() {
   var land = W > H && !fullOn;
   var off = land && state.sideOff, gap = (land && !state.sideOff && state.sideGap > 0) ? state.sideGap : 0;
   document.body.className = (state.ctrl === "swipe" ? "swipe" : "") + (fullOn ? " full" : "") + (autoOn() ? " autoon" : "") +
-    (state.hideTop && !fullOn ? " notop" : "") + (off ? " nosides" : "") + (state.source === "med" ? " med" : "");
+    (state.hideTop && !fullOn ? " notop" : "") + (off ? " nosides" : "") + (state.source === "med" ? " med" : "") + (state.source === "med" && state.med.mode === "auto" ? " mauto" : "");
   var app = document.querySelector(".app"), act = document.querySelector(".actions"), rb = el("rbar");
   if (gap) {
     var pad = Math.round(W * gap / 100) + "px";
@@ -1863,19 +1872,46 @@ document.querySelectorAll("#segArWinP button").forEach(function (b) {
 });
 
 /* ---------- медитация: ритм «Вдох / Выдох» ---------- */
-var rh = { ph: 0, n: 0, lock: false, tm: null };
+var rh = { ph: 0, n: 0, lock: false, tm: null, lastT: 0, lastPh: 0, k: 0, ivIn: 0, ivOut: 0 };
 function rhShow() {
   var b = el("rhythm"), t = el("rhText");
   if (state.source !== "med" || !rh.ph) { b.style.background = "transparent"; t.textContent = ""; return; }
   var hex = rh.ph === 1 ? state.med.cIn : state.med.cOut;
   b.style.background = hex; b.style.color = inkFor(hex);
+  b.style.webkitFilter = b.style.filter = state.med.bri < 100 ? "brightness(" + state.med.bri / 100 + ")" : "";
   t.textContent = rh.ph === 1 ? "Вдох" : "Выдох";
 }
-function rhReset() { clearTimeout(rh.tm); rh.tm = null; rh.ph = 0; rh.n = 0; rh.lock = false; rhShow(); }
+function rhReset() { clearTimeout(rh.tm); rh.tm = null; rh.ph = 0; rh.n = 0; rh.lock = false; rh.lastT = 0; rh.lastPh = 0; rh.k = 0; rh.ivIn = 0; rh.ivOut = 0; rhProg(0); rhShow(); }
+function rhIv(ph) { return (ph === 1 ? rh.ivIn : rh.ivOut) || rh.ivIn || rh.ivOut; }
+function rhProg(ms) {
+  var f = el("rprogFill");
+  f.style.webkitTransition = f.style.transition = "none"; f.style.width = "0";
+  if (!ms) return;
+  f.style.background = rh.ph === 1 ? state.med.cIn : state.med.cOut;
+  void f.offsetWidth;
+  f.style.webkitTransition = f.style.transition = "width " + ms + "ms linear"; f.style.width = "100%";
+}
+function rhArm() { var ms = rhIv(rh.ph); if (ms) { rh.tm = setTimeout(rhTick, ms); rhProg(ms); } else rhProg(0); }
+function rhTick() { rh.ph = rh.ph === 1 ? 2 : 1; rhShow(); rhArm(); }
+function rhAuto() {
+  var now = new Date().getTime(), ph = 1, g, lim;
+  clearTimeout(rh.tm); rh.tm = null;
+  g = now - rh.lastT;
+  lim = Math.max(12000, 1.8 * ((rh.lastPh === 1 ? rh.ivIn : rh.ivOut) || 0));
+  if (rh.k > 0 && rh.k < 3 && g <= lim) {
+    g = Math.max(300, Math.min(30000, g));
+    if (rh.lastPh === 1) rh.ivIn = g; else rh.ivOut = g;
+    ph = rh.lastPh === 1 ? 2 : 1; rh.k++;
+  } else rh.k = 1;
+  rh.lastT = now; rh.lastPh = ph; rh.ph = ph;
+  if (rh.k >= 3) rh.k = 0;
+  rhShow(); rhArm();
+}
 function rhSwitch() { rh.tm = null; rh.ph = rh.ph === 1 ? 2 : 1; rh.n = 0; rh.lock = false; rhShow(); }
 function onRhythm() {
   var m = state.med;
   if (state.source !== "med" || sheetOpen()) return;
+  if (m.mode === "auto") { rhAuto(); return; }
   if (!rh.ph) { rh.ph = 1; rh.n = 0; rhShow(); return; }
   if (m.mode === "tap") { rhSwitch(); return; }
   if (rh.lock) return;
@@ -1894,14 +1930,19 @@ function renderMedSettings() {
   el("medCountBox").style.display = m.mode === "count" ? "" : "none";
   el("medModeNote").textContent = m.mode === "tap"
     ? "Первое нажатие «Ритм» показывает «Вдох», следующее «Выдох», и так далее."
+    : m.mode === "auto"
+    ? "Серия нажатий «Ритм»: первое всегда показывает «Вдох» (начало вашего вдоха), второе «Выдох» (начало выдоха), третье снова «Вдох». Время между первым и вторым задаёт вдох, между вторым и третьим выдох; хватит и двух нажатий, тогда выдох равен вдоху. Окна сменяются сами, линия над кнопкой показывает, сколько осталось до смены. Чтобы замедлить или ускорить, нажмите новую серию в любой момент. Остановить: «Начать сначала» или смена режима."
     : "Первое нажатие показывает «Вдох». Дальше нажимайте «Ритм» заданное число раз, пока идёт вдох; после последнего нажатия, через паузу, появляется «Выдох». Так же на выдохе.";
   el("medDelVal").textContent = String(m.delay).replace(".", ",") + " с";
   el("medDelRange").value = Math.round(m.delay * 10);
   el("colorNote").textContent = state.randColors
     ? "Цвета зон меняются сами при каждом шаге. Цвета «Вдох» и «Выдох» задаются здесь."
     : "Цвет 1 и цвет 2: две зоны, цвет остаётся у своей зоны при смене расположения. «Вдох» и «Выдох»: фон надписи сверху.";
+  el("medBriVal").textContent = m.bri + "%";
+  el("medBriRange").value = m.bri;
   el("info").textContent = "";
 }
+function setMedBri(v) { state.med.bri = Math.max(10, Math.min(100, Math.round(v / 5) * 5)); save(); syncSettings(); rhShow(); }
 function setMedDelay(v) { v = Math.max(1, Math.min(100, Math.round(v * 10))); state.med.delay = v / 10; save(); syncSettings(); }
 document.querySelectorAll("#segMedMode button").forEach(function (b) {
   b.addEventListener("click", function () { state.med.mode = b.getAttribute("data-v"); rhReset(); save(); syncSettings(); });
@@ -1912,6 +1953,9 @@ document.querySelectorAll("#segMedIn button").forEach(function (b) {
 document.querySelectorAll("#segMedOut button").forEach(function (b) {
   b.addEventListener("click", function () { state.med.nOut = parseInt(b.getAttribute("data-v"), 10); rhReset(); save(); syncSettings(); });
 });
+el("medBriMinus").addEventListener("click", function () { setMedBri(state.med.bri - 5); });
+el("medBriPlus").addEventListener("click", function () { setMedBri(state.med.bri + 5); });
+el("medBriRange").addEventListener("input", function () { setMedBri(parseInt(this.value, 10)); });
 el("medDelMinus").addEventListener("click", function () { setMedDelay(state.med.delay - 0.1); });
 el("medDelPlus").addEventListener("click", function () { setMedDelay(state.med.delay + 0.1); });
 el("medDelRange").addEventListener("input", function () { setMedDelay(parseInt(this.value, 10) / 10); });
