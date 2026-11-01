@@ -357,7 +357,7 @@ body.mauto .rhythm { bottom: 0; bottom: calc(36px + var(--rh) * 4 / 3 + env(safe
         <div class="slrow"><input type="range" id="medDelRange" min="1" max="100" step="1" aria-label="Пауза"></div>
         <p class="note">От 0,1 до 10 секунд. Через это время после последнего нажатия надпись меняется.</p>
       </div>
-      <h3>Яркость окна «Вдох» / «Выдох»</h3>
+      <h3>Яркость надписи «Вдох» / «Выдох»</h3>
       <div class="stepper"><button type="button" id="medBriMinus" aria-label="Темнее">−</button><div class="val" id="medBriVal">100%</div><button type="button" id="medBriPlus" aria-label="Ярче">+</button></div>
       <div class="slrow"><input type="range" id="medBriRange" min="10" max="100" step="5" aria-label="Яркость"></div>
     </div>
@@ -1878,7 +1878,7 @@ function rhShow() {
   if (state.source !== "med" || !rh.ph) { b.style.background = "transparent"; t.textContent = ""; return; }
   var hex = rh.ph === 1 ? state.med.cIn : state.med.cOut;
   b.style.background = hex; b.style.color = inkFor(hex);
-  b.style.webkitFilter = b.style.filter = state.med.bri < 100 ? "brightness(" + state.med.bri / 100 + ")" : "";
+  t.style.opacity = state.med.bri < 100 ? String(state.med.bri / 100) : "";
   t.textContent = rh.ph === 1 ? "Вдох" : "Выдох";
 }
 function rhReset() { clearTimeout(rh.tm); rh.tm = null; rh.ph = 0; rh.n = 0; rh.lock = false; rh.lastT = 0; rh.lastPh = 0; rh.k = 0; rh.ivIn = 0; rh.ivOut = 0; rhProg(0); rhShow(); }
