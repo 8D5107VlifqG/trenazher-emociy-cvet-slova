@@ -481,6 +481,7 @@ body.mauto .rhythm { bottom: 0; bottom: calc(36px + var(--rh) * 4 / 3 + env(safe
       <p class="note">Счётчик, полоска и кнопка «Настройки» скрыты, зоны занимают весь экран. Чтобы выключить полный экран, проведите пальцем снизу вверх по центру экрана: вернутся кнопка «Настройки» и кнопки «Старт/Пауза». Включить снова можно здесь. При автоперемещении в полном экране кнопок нет: «Старт/Пауза» переключается свайпом сверху вниз по центру экрана.</p>
     </div>
 
+    <div id="screenSec">
     <h2>Экран</h2>
     <h3>Верхняя панель</h3>
     <div class="seg" id="segTop">
@@ -497,6 +498,7 @@ body.mauto .rhythm { bottom: 0; bottom: calc(36px + var(--rh) * 4 / 3 + env(safe
     <div id="gapBox">
       <div class="stepper"><button type="button" id="gapMinus" aria-label="Меньше">−</button><div class="val" id="gapVal">Авто</div><button type="button" id="gapPlus" aria-label="Больше">+</button></div>
       <div class="slrow"><input type="range" id="gapRange" min="1" max="40" step="1" aria-label="Ширина боковых полей"><button class="btn" type="button" id="gapAuto" style="margin-left:10px;padding:10px 14px">Авто</button></div>
+    </div>
     </div>
 
     <h2>Автоперемещение</h2>
@@ -584,7 +586,7 @@ var state = {
   ar: { cat: "1-10", ops: "both", order: "random", ans: "tap", winL: 2, winP: 2, ptr: 0, colors: ["#35629e", "#2e8a86", "#7a5aa0", "#a0683a"], fsz: { h: 0, v: 0 } },
   c1: "#35629e", c2: "#2e8a86", med: { bri: 100, mode: "tap", nIn: 2, nOut: 2, delay: 1, cIn: "#2f6f9f", cOut: "#9a6b2f" }, cmap: {}, hor: true, ver: true, diag: true,
   words: 2, side: "first", sameSize: true, fsz: { h: 0, v: 0, d: 0 }, randLayout: false, randColors: false, newPair: "after",
-  ctrl: "buttons", full: false, hideTop: false, sideOff: false, sideGap: 0, autoMode: "off", autoScope: "random", ppAxis: "h", minS: 3, maxS: 8,
+  vw: {}, ctrl: "buttons", full: false, hideTop: false, sideOff: false, sideGap: 0, autoMode: "off", autoScope: "random", ppAxis: "h", minS: 3, maxS: 8,
   undo: null, cur: null, ptr: 0, pairNo: 0
 };
 var emoMeta = {};
@@ -636,6 +638,12 @@ function shuffle(a) {
 function range(n) { var r = []; for (var i = 0; i < n; i++) r.push(i); return r; }
 function clone(o) { return JSON.parse(JSON.stringify(o)); }
 function autoOn() { return state.autoMode !== "off"; }
+function vwStash() { state.vw[state.source] = { full: state.full, hideTop: state.hideTop, sideOff: state.sideOff, sideGap: state.sideGap }; }
+function vwLoad() {
+  var v = state.vw[state.source] || { full: false, hideTop: false, sideOff: false, sideGap: 0 };
+  if (state.source === "med") v = { full: false, hideTop: false, sideOff: false, sideGap: 0 };
+  state.full = v.full; state.hideTop = v.hideTop; state.sideOff = v.sideOff; state.sideGap = v.sideGap;
+}
 function wN() { return state.source === "med" ? 0 : state.words; }
 
 /* ---------- геометрия расположений ---------- */
@@ -835,8 +843,9 @@ function ready() {
 /* ---------- сохранение ---------- */
 function save() {
   try {
+    vwStash();
     var s = {
-      src: state.src, theme: state.theme, source: state.source, c1: state.c1, c2: state.c2, cmap: state.cmap,
+      vw: state.vw, src: state.src, theme: state.theme, source: state.source, c1: state.c1, c2: state.c2, cmap: state.cmap,
       hor: state.hor, ver: state.ver, diag: state.diag,
       words: state.words, side: state.side, randLayout: state.randLayout, randColors: state.randColors, newPair: state.newPair,
       ctrl: state.ctrl, full: state.full, hideTop: state.hideTop, sideOff: state.sideOff, sideGap: state.sideGap, sameSize: state.sameSize, fsz: state.fsz, autoMode: state.autoMode, autoScope: state.autoScope, ppAxis: state.ppAxis, minS: state.minS, maxS: state.maxS,
@@ -877,6 +886,13 @@ function load() {
     state.hideTop = s.hideTop === true;
     state.sideOff = s.sideOff === true;
     var sg = parseInt(s.sideGap, 10); state.sideGap = (sg >= 1 && sg <= 40) ? sg : 0;
+    state.vw = {};
+    if (s.vw && typeof s.vw === "object") ["emotions", "polarities", "arith", "med"].forEach(function (k) {
+      var v = s.vw[k], g;
+      if (v && typeof v === "object") { g = parseInt(v.sideGap, 10); state.vw[k] = { full: v.full === true, hideTop: v.hideTop === true, sideOff: v.sideOff === true, sideGap: (g >= 1 && g <= 40) ? g : 0 }; }
+    });
+    if (state.vw[state.source]) vwLoad();
+    if (state.source === "med") { state.full = false; state.hideTop = false; state.sideOff = false; state.sideGap = 0; }
     state.sameSize = s.sameSize !== false;
     if (s.fsz && typeof s.fsz === "object") ["h", "v", "d"].forEach(function (k) { var v = parseInt(s.fsz[k], 10); state.fsz[k] = (v >= 10 && v <= 160) ? v : 0; });
     if (s.autoMode === "fwd" || s.autoMode === "pp") state.autoMode = s.autoMode;
@@ -1192,11 +1208,11 @@ function barFraction(cur) {
 }
 function applyBody() {
   var W = window.innerWidth || document.documentElement.clientWidth, H = window.innerHeight || document.documentElement.clientHeight;
-  var fullOn = state.ctrl === "swipe" && state.full;
+  var fullOn = state.ctrl === "swipe" && state.full && state.source !== "med";
   var land = W > H && !fullOn;
-  var off = land && state.sideOff, gap = (land && !state.sideOff && state.sideGap > 0) ? state.sideGap : 0;
+  var off = land && state.sideOff && state.source !== "med", gap = (land && !state.sideOff && state.sideGap > 0 && state.source !== "med") ? state.sideGap : 0;
   document.body.className = (state.ctrl === "swipe" ? "swipe" : "") + (fullOn ? " full" : "") + (autoOn() ? " autoon" : "") +
-    (state.hideTop && !fullOn ? " notop" : "") + (off ? " nosides" : "") + (state.source === "med" ? " med" : "") + (state.source === "med" && state.med.mode === "auto" ? " mauto" : "");
+    (state.hideTop && !fullOn && state.source !== "med" ? " notop" : "") + (off ? " nosides" : "") + (state.source === "med" ? " med" : "") + (state.source === "med" && state.med.mode === "auto" ? " mauto" : "");
   var app = document.querySelector(".app"), act = document.querySelector(".actions"), rb = el("rbar");
   if (gap) {
     var pad = Math.round(W * gap / 100) + "px";
@@ -1715,6 +1731,7 @@ function syncSettings() {
   el("emoBox").style.display = (pol || ar || md) ? "none" : "";
   el("medBox").style.display = md ? "" : "none";
   el("sizeSec").style.display = md ? "none" : "";
+  el("screenSec").style.display = md ? "none" : "";
   el("arBox").style.display = ar ? "" : "none";
   el("btnBuiltin").style.display = (pol || ar || md) ? "none" : "";
   el("resetNote").style.display = (ar || md) ? "none" : "";
@@ -1756,7 +1773,7 @@ function syncSettings() {
   setSegSel("#segPair", function (v) { return v === state.newPair; });
   setSegSel("#segCtrl", function (v) { return v === state.ctrl; });
   setSegSel("#segFull", function (v) { return (v === "1") === state.full; });
-  el("fullBox").style.display = state.ctrl === "swipe" ? "" : "none";
+  el("fullBox").style.display = (state.ctrl === "swipe" && state.source !== "med") ? "" : "none";
   setSegSel("#segTop", function (v) { return (v === "1") === state.hideTop; });
   el("topNote").textContent = "Скрыть: счётчик, полоска и кнопка «Настройки» вверху убираются, зоны занимают их место. Кнопка «Настройки» появляется внизу между «Назад» и «Далее». В режиме свайпов внизу остаётся только «Настройки» (и «Старт/Пауза» при автоперемещении). Если включён «Полный экран», эта настройка не действует.";
   setSegSel("#segSides", function (v) { return (v === "1") === state.sideOff; });
@@ -1965,7 +1982,7 @@ document.querySelectorAll("#segSource button").forEach(function (b) {
   b.addEventListener("click", function () {
     var v = b.getAttribute("data-v");
     if (v === state.source) return;
-    rhReset(); state.source = v; resetPairs(); save(); syncSettings();
+    rhReset(); vwStash(); state.source = v; vwLoad(); resetPairs(); save(); syncSettings();
   });
 });
 function setCat(id) {
